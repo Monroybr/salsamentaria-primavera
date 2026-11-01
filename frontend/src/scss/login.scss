@@ -1,0 +1,575 @@
+
+/* =========================================
+   SALSAMENTARIA PRIMAVERA
+   Estilos del inicio de sesión
+========================================= */
+
+/* COLORES */
+
+$verde-oscuro: #123d2c;
+$verde-principal: #155b3d;
+$verde-hover: #0f4931;
+$blanco: #ffffff;
+$texto: #17221d;
+$gris: #6c7771;
+$borde: #d5ddd8;
+
+/* CONFIGURACIÓN GENERAL */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =========================================
+   INICIO DE SESIÓN
+========================================= */
+
+.login {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      rgba(9, 36, 25, 0.72),
+      rgba(9, 36, 25, 0.72)
+    ),
+    url("../assets/salsamentaria.jpg")
+      center / cover no-repeat;
+
+  /* CONTENEDOR PRINCIPAL */
+
+  &__contenedor {
+    width: 100%;
+    max-width: 1300px;
+    min-height: 650px;
+    min-width: 0;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+
+    background: $blanco;
+    border-radius: 26px;
+    overflow: hidden;
+
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  }
+
+  /* =========================================
+     PANEL IZQUIERDO
+  ========================================= */
+
+  &__informacion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 0;
+    padding: 55px 45px;
+
+    color: $blanco;
+    text-align: center;
+
+    background:
+      linear-gradient(
+        rgba(10, 70, 45, 0.9),
+        rgba(10, 70, 45, 0.9)
+      ),
+      url("../assets/salsamentaria.jpg")
+        center / cover no-repeat;
+  }
+
+  &__marca {
+    width: 100%;
+    max-width: 420px;
+    min-width: 0;
+
+    h1 {
+      margin: 25px 0 15px;
+      font-size: clamp(2rem, 3.2vw, 3.5rem);
+      font-weight: 600;
+      line-height: 1.12;
+      overflow-wrap: break-word;
+
+      span {
+        display: block;
+      }
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(1.1rem, 1.8vw, 1.7rem);
+      font-weight: 500;
+    }
+
+    p {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.95);
+    }
+  }
+
+  &__logo {
+    width: 68px;
+    height: 68px;
+    margin: 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 2px solid $blanco;
+    border-radius: 15px;
+
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  &__separador {
+    width: 160px;
+    max-width: 100%;
+    height: 1px;
+    margin: 28px auto;
+
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  /* =========================================
+     PANEL DERECHO
+  ========================================= */
+
+  &__formulario {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 0;
+    padding: 60px 55px;
+
+    background: $blanco;
+  }
+
+  &__contenido {
+    width: 100%;
+    max-width: 480px;
+    min-width: 0;
+  }
+
+  &__encabezado {
+    margin-bottom: 40px;
+    text-align: center;
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: clamp(2rem, 2.6vw, 2.6rem);
+      font-weight: 500;
+      color: $texto;
+    }
+
+    p {
+      margin: 0;
+      color: $gris;
+      line-height: 1.6;
+    }
+  }
+
+  /* =========================================
+     CAMPOS DEL FORMULARIO
+  ========================================= */
+
+  &__campo {
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 20px;
+
+    label {
+      display: block;
+      margin-bottom: 9px;
+
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: $texto;
+    }
+
+    input {
+      display: block;
+
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      min-height: 56px;
+
+      padding: 0 17px;
+      box-sizing: border-box;
+
+      border: 1px solid $borde;
+      border-radius: 10px;
+      outline: none;
+
+      background: $blanco;
+      color: $texto;
+
+      font: inherit;
+      font-size: 1rem;
+
+      transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+
+      &::placeholder {
+        color: #929c96;
+      }
+
+      &:focus {
+        border-color: $verde-principal;
+        box-shadow: 0 0 0 3px rgba(21, 91, 61, 0.12);
+      }
+    }
+  }
+
+  /* =========================================
+     CAMPO DE CONTRASEÑA
+  ========================================= */
+
+  &__password {
+    position: relative;
+
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    input {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+
+      /* Espacio reservado para Mostrar */
+      padding-right: 100px;
+    }
+  }
+
+  /* BOTÓN MOSTRAR / OCULTAR */
+
+  &__mostrar {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+
+    transform: translateY(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 36px;
+    padding: 8px 10px;
+
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+
+    color: $verde-principal;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+      color 0.2s,
+      background-color 0.2s;
+
+    &:hover {
+      color: $verde-hover;
+      background: rgba(21, 91, 61, 0.06);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $verde-principal;
+      outline-offset: 2px;
+    }
+  }
+
+  /* =========================================
+     MENSAJES DE VALIDACIÓN
+  ========================================= */
+
+  &__mensaje {
+    margin: 0 0 15px;
+
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #b42318;
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  /* =========================================
+     BOTÓN INGRESAR
+  ========================================= */
+
+  &__boton {
+    display: block;
+
+    width: 100%;
+    max-width: 100%;
+    min-height: 60px;
+
+    margin-top: 8px;
+    padding: 12px 20px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: $verde-principal;
+    color: $blanco;
+
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+      background-color 0.2s,
+      transform 0.2s;
+
+    &:hover {
+      background: $verde-hover;
+    }
+
+    &:active {
+      transform: scale(0.99);
+    }
+
+    &:focus-visible {
+      outline: 3px solid #83bfa2;
+      outline-offset: 3px;
+    }
+
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+  }
+
+  /* =========================================
+     PIE DEL FORMULARIO
+  ========================================= */
+
+  &__pie {
+    margin-top: 40px;
+    text-align: center;
+
+    p {
+      margin: 0;
+      color: $gris;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+  }
+}
+
+/* =========================================
+   TABLETAS
+   Hasta 1024 px
+========================================= */
+
+@media (max-width: 1024px) {
+  .login {
+    padding: 20px;
+
+    &__contenedor {
+      min-height: 600px;
+    }
+
+    &__informacion,
+    &__formulario {
+      padding: 40px 30px;
+    }
+
+    &__marca {
+      h1 {
+        font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      }
+    }
+
+    &__encabezado {
+      h2 {
+        font-size: 2rem;
+      }
+    }
+  }
+}
+
+/* =========================================
+   TELÉFONOS
+   Hasta 700 px
+========================================= */
+
+@media (max-width: 700px) {
+  .login {
+    padding: 14px;
+    align-items: flex-start;
+
+    &__contenedor {
+      grid-template-columns: minmax(0, 1fr);
+
+      min-height: auto;
+      border-radius: 18px;
+    }
+
+    /* PANEL SUPERIOR */
+
+    &__informacion {
+      padding: 35px 25px;
+    }
+
+    &__marca {
+      h1 {
+        margin: 15px 0 10px;
+        font-size: 2rem;
+      }
+
+      h2 {
+        font-size: 1.15rem;
+      }
+
+      p {
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+    }
+
+    &__logo {
+      width: 52px;
+      height: 52px;
+      font-size: 1rem;
+    }
+
+    &__separador {
+      margin: 18px auto;
+    }
+
+    /* FORMULARIO INFERIOR */
+
+    &__formulario {
+      padding: 35px 24px;
+    }
+
+    &__contenido {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    &__encabezado {
+      margin-bottom: 28px;
+
+      h2 {
+        font-size: 2rem;
+      }
+
+      p {
+        font-size: 0.9rem;
+      }
+    }
+
+    &__campo {
+      margin-bottom: 18px;
+
+      input {
+        min-height: 52px;
+        font-size: 16px;
+      }
+    }
+
+    &__password {
+      input {
+        padding-right: 90px;
+      }
+    }
+
+    &__mostrar {
+      right: 8px;
+      padding: 7px 8px;
+      font-size: 0.8rem;
+    }
+
+    &__boton {
+      min-height: 54px;
+    }
+
+    &__pie {
+      margin-top: 25px;
+    }
+  }
+}
+
+/* =========================================
+   TELÉFONOS PEQUEÑOS
+   Hasta 380 px
+========================================= */
+
+@media (max-width: 380px) {
+  .login {
+    padding: 8px;
+
+    &__informacion,
+    &__formulario {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    &__marca {
+      h1 {
+        font-size: 1.7rem;
+      }
+
+      p {
+        font-size: 0.85rem;
+      }
+    }
+
+    &__encabezado {
+      h2 {
+        font-size: 1.75rem;
+      }
+    }
+
+    &__campo {
+      input {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+    }
+
+    &__password {
+      input {
+        padding-right: 85px;
+      }
+    }
+
+    &__mostrar {
+      right: 5px;
+      font-size: 0.78rem;
+    }
+  }
+}

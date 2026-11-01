@@ -1,0 +1,547 @@
+
+// Inventario: colores y estructura principal.
+$inv-verde: #155b3d;
+$inv-borde: #dfe6e1;
+$inv-gris: #66766e;
+
+.inventario {
+  min-width: 0;
+
+  &__encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 24px;
+
+    h1 {
+      margin: 8px 0;
+    }
+
+    p {
+      color: $inv-gris;
+    }
+  }
+
+  // Indicadores superiores.
+  &__resumen {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    background: #fff;
+    border: 1px solid $inv-borde;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+
+    article {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 20px;
+      border-right: 1px solid $inv-borde;
+
+      &:last-child {
+        border-right: 0;
+      }
+
+      span {
+        color: $inv-gris;
+        font-size: 0.8rem;
+      }
+
+      strong {
+        color: #17221d;
+        font-size: 1.1rem;
+      }
+    }
+  }
+
+  &__advertencia {
+    color: #c56a00 !important;
+  }
+
+  // Pestañas.
+  &__pestanas {
+    display: flex;
+    gap: 5px;
+    width: fit-content;
+    max-width: 100%;
+    padding: 5px;
+    margin-bottom: 16px;
+    background: #edf1ee;
+    border-radius: 9px;
+    overflow-x: auto;
+  }
+
+  &__pestana {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 13px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: $inv-gris;
+    font: inherit;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    cursor: pointer;
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    &.activa {
+      background: #fff;
+      color: $inv-verde;
+      box-shadow: 0 1px 4px #00000010;
+    }
+  }
+
+  &__contador-alertas {
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: #fff1d9;
+    color: #b56c00;
+    font-size: 0.7rem;
+  }
+
+  // Oculta las pestañas que no están seleccionadas.
+  &__panel[hidden] {
+    display: none !important;
+  }
+
+  // Buscador y filtros.
+  &__filtros {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px 160px;
+    gap: 10px;
+    max-width: 900px;
+    margin-bottom: 20px;
+
+    input,
+    select {
+      width: 100%;
+      min-width: 0;
+      min-height: 43px;
+      border: 1px solid $inv-borde;
+      border-radius: 8px;
+      background: #fff;
+      padding: 0 12px;
+      font: inherit;
+      font-size: 0.82rem;
+      color: #17221d;
+    }
+  }
+
+  &__buscar {
+    position: relative;
+    min-width: 0;
+
+    input {
+      padding-left: 38px;
+    }
+
+    svg {
+      position: absolute;
+      top: 13px;
+      left: 12px;
+      width: 17px;
+      height: 17px;
+      color: $inv-gris;
+      pointer-events: none;
+    }
+  }
+
+  // Tabla y panel lateral.
+  &__distribucion {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 245px;
+    align-items: start;
+    gap: 15px;
+  }
+
+  &__tabla-contenedor,
+  &__alertas-lateral,
+  &__seccion {
+    min-width: 0;
+    background: #fff;
+    border: 1px solid $inv-borde;
+    border-radius: 11px;
+    overflow: hidden;
+  }
+
+  &__tabla-scroll {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  &__tabla {
+    width: 100%;
+    min-width: 780px;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 15px 12px;
+      text-align: left;
+      border-bottom: 1px solid #e8ece9;
+      font-size: 0.8rem;
+    }
+
+    th {
+      background: #f8faf8;
+      color: $inv-gris;
+      font-size: 0.66rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    td {
+      color: #17221d;
+    }
+  }
+
+  &__producto {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    strong,
+    small {
+      display: block;
+    }
+
+    strong {
+      font-size: 0.8rem;
+    }
+
+    small {
+      margin-top: 4px;
+      color: $inv-gris;
+      font-size: 0.68rem;
+    }
+  }
+
+  &__producto-icono {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    background: #f5eee3;
+    border-radius: 7px;
+    color: #b17a2b;
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+  }
+
+  &__tipo,
+  &__estado {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+
+  &__tipo--granel {
+    background: #f5eee3;
+    color: #8b6125;
+  }
+
+  &__tipo--empacado {
+    background: #e7f2f4;
+    color: #347583;
+  }
+
+  &__estado {
+    border-radius: 20px;
+    background: #e5f3e9;
+    color: $inv-verde;
+
+    &.bajo {
+      background: #fff0d8;
+      color: #b56c00;
+    }
+  }
+
+  &__nivel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    small {
+      color: $inv-gris;
+      font-size: 0.65rem;
+    }
+  }
+
+  &__nivel-pista {
+    width: 85px;
+    height: 5px;
+    background: #e8eeea;
+    border-radius: 10px;
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      background: #23754f;
+      border-radius: 10px;
+
+      &.bajo {
+        background: #df922b;
+      }
+    }
+  }
+
+  // Paginación.
+  &__paginacion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+
+    span {
+      color: $inv-gris;
+      font-size: 0.72rem;
+    }
+
+    > div {
+      display: flex;
+      gap: 5px;
+    }
+
+    button {
+      min-width: 29px;
+      min-height: 29px;
+      border: 1px solid $inv-borde;
+      border-radius: 6px;
+      background: #fff;
+      color: #17221d;
+      cursor: pointer;
+
+      &.activo {
+        background: $inv-verde;
+        color: #fff;
+      }
+
+      &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  // Alertas laterales.
+  &__alertas-lateral {
+    padding: 15px;
+  }
+
+  &__alertas-titulo {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 15px;
+
+    h2 {
+      margin: 0 0 5px;
+      font-size: 0.95rem;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.72rem;
+      color: $inv-gris;
+    }
+
+    > span {
+      align-self: flex-start;
+      padding: 5px 9px;
+      border-radius: 50%;
+      background: #fff0d8;
+      color: #b56c00;
+      font-size: 0.75rem;
+    }
+  }
+
+  &__alerta {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 13px 0;
+    border-bottom: 1px solid $inv-borde;
+
+    > svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+      color: #d28a22;
+    }
+
+    strong,
+    small {
+      display: block;
+    }
+
+    strong {
+      font-size: 0.78rem;
+    }
+
+    small {
+      margin-top: 4px;
+      color: $inv-gris;
+      font-size: 0.7rem;
+    }
+  }
+
+  &__ver-alertas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 15px;
+    padding: 11px;
+    border: 0;
+    border-radius: 7px;
+    background: #e7f1e9;
+    color: $inv-verde;
+    font: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
+
+  // Contenido de las otras pestañas.
+  &__seccion {
+    padding: 22px;
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 1.1rem;
+    }
+
+    p {
+      color: $inv-gris;
+      font-size: 0.85rem;
+    }
+  }
+
+  &__seccion-titulo {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+  }
+
+  &__enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: $inv-verde;
+    text-decoration: none;
+    font-size: 0.82rem;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &__lista-alertas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+
+    .inventario__alerta {
+      padding: 15px;
+      border: 1px solid $inv-borde;
+      border-radius: 9px;
+    }
+  }
+
+  &__sin-resultados {
+    padding: 20px;
+    color: $inv-gris;
+    text-align: center;
+  }
+}
+
+// Tabletas.
+@media (max-width: 1100px) {
+  .inventario {
+    &__distribucion {
+      grid-template-columns: 1fr;
+    }
+
+    &__alertas-lateral {
+      max-width: none;
+    }
+
+    &__resumen {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+
+      article:nth-child(2) {
+        border-right: 0;
+      }
+
+      article:nth-child(-n + 2) {
+        border-bottom: 1px solid $inv-borde;
+      }
+    }
+  }
+}
+
+// Teléfonos.
+@media (max-width: 700px) {
+  .inventario {
+    &__encabezado {
+      align-items: stretch;
+    }
+
+    &__resumen {
+      grid-template-columns: 1fr 1fr;
+
+      article {
+        padding: 14px;
+      }
+    }
+
+    &__filtros {
+      grid-template-columns: 1fr;
+    }
+
+    &__lista-alertas {
+      grid-template-columns: 1fr;
+    }
+
+    &__paginacion {
+      justify-content: center;
+    }
+  }
+}
+
+@media (max-width: 380px) {
+  .inventario__resumen {
+    grid-template-columns: 1fr;
+
+    article {
+      border-right: 0;
+      border-bottom: 1px solid $inv-borde;
+    }
+  }
+}

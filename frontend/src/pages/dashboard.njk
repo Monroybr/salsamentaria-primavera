@@ -1,0 +1,608 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Panel principal | Salsamentaria Primavera</title>
+
+  <!-- AUTENTICACIÓN DEL ADMINISTRADOR -->
+  <script src="js/auth.js"></script>
+
+  <script>
+    // Impedir el acceso sin iniciar sesión.
+    window.PrimaveraAuth.protegerPagina();
+  </script>
+
+  <!-- ESTILOS GENERALES -->
+  <link rel="stylesheet" href="css/main.css">
+
+</head>
+
+<body class="dashboard-page">
+
+  <!-- MENÚ LATERAL -->
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+
+    <!-- BARRA SUPERIOR -->
+    {% include "header.njk" %}
+
+    <main class="dashboard">
+
+      <!-- =====================================
+           ENCABEZADO
+      ====================================== -->
+
+      <div class="dashboard__encabezado">
+
+        <div class="dashboard__bienvenida">
+
+          <p class="dashboard__ruta">
+            Salsamentaria Primavera / Inicio
+          </p>
+
+          <h1>Buenos días, Ana</h1>
+
+          <p>Este es el resumen de tu negocio hoy.</p>
+
+        </div>
+
+        <a
+          href="nueva-venta.html"
+          class="dashboard__nueva-venta"
+        >
+
+          <i
+            data-lucide="shopping-cart"
+            aria-hidden="true"
+          ></i>
+
+          <span>Registrar venta</span>
+
+        </a>
+
+      </div>
+
+
+      <!-- =====================================
+           INDICADORES DEL NEGOCIO
+      ====================================== -->
+
+      <section
+        class="dashboard__indicadores"
+        aria-label="Indicadores del negocio"
+      >
+
+        <!-- VENTAS DE HOY -->
+        <article class="indicador">
+
+          <div class="indicador__icono indicador__icono--ventas">
+
+            <i
+              data-lucide="wallet"
+              aria-hidden="true"
+            ></i>
+
+          </div>
+
+          <div class="indicador__informacion">
+
+            <span>Ventas de hoy</span>
+
+            <strong>$1.284.500</strong>
+
+            <small class="indicador__variacion">
+
+              <i
+                data-lucide="trending-up"
+                aria-hidden="true"
+              ></i>
+
+              +12,5% vs. ayer
+
+            </small>
+
+          </div>
+
+        </article>
+
+
+        <!-- PRODUCTOS ACTIVOS -->
+        <article class="indicador">
+
+          <div class="indicador__icono indicador__icono--productos">
+
+            <i
+              data-lucide="package"
+              aria-hidden="true"
+            ></i>
+
+          </div>
+
+          <div class="indicador__informacion">
+
+            <span>Productos activos</span>
+
+            <strong>128</strong>
+
+            <small class="indicador__variacion">
+
+              <i
+                data-lucide="trending-up"
+                aria-hidden="true"
+              ></i>
+
+              +4 este mes
+
+            </small>
+
+          </div>
+
+        </article>
+
+
+        <!-- VALOR DEL INVENTARIO -->
+        <article class="indicador">
+
+          <div class="indicador__icono indicador__icono--inventario">
+
+            <i
+              data-lucide="archive"
+              aria-hidden="true"
+            ></i>
+
+          </div>
+
+          <div class="indicador__informacion">
+
+            <span>Valor del inventario</span>
+
+            <strong>$18.640.000</strong>
+
+            <small class="indicador__variacion">
+
+              <i
+                data-lucide="trending-up"
+                aria-hidden="true"
+              ></i>
+
+              +3,2% este mes
+
+            </small>
+
+          </div>
+
+        </article>
+
+
+        <!-- CARTERA PENDIENTE -->
+        <article class="indicador">
+
+          <div class="indicador__icono indicador__icono--cartera">
+
+            <i
+              data-lucide="users"
+              aria-hidden="true"
+            ></i>
+
+          </div>
+
+          <div class="indicador__informacion">
+
+            <span>Cartera pendiente</span>
+
+            <strong>$596.900</strong>
+
+            <small class="indicador__variacion">
+
+              <i
+                data-lucide="users"
+                aria-hidden="true"
+              ></i>
+
+              4 clientes
+
+            </small>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <!-- =====================================
+           GRÁFICO Y ALERTAS
+      ====================================== -->
+
+      <section
+        class="dashboard__contenido"
+        aria-label="Ventas y alertas del negocio"
+      >
+
+        <!-- GRÁFICO DE VENTAS -->
+        <article class="dashboard__tarjeta">
+
+          <div class="dashboard__tarjeta-encabezado">
+
+            <div>
+
+              <h2>Ventas de la semana</h2>
+
+              <p>
+                Ingresos registrados en los últimos 7 días
+              </p>
+
+            </div>
+
+            <select
+              id="periodoVentas"
+              class="dashboard__periodo"
+              aria-label="Seleccionar período de ventas"
+            >
+
+              <option value="actual" selected>
+                Esta semana
+              </option>
+
+              <option value="anterior">
+                Semana anterior
+              </option>
+
+            </select>
+
+          </div>
+
+          <!-- Gráfico generado desde dashboard.js -->
+          <div
+            class="dashboard__grafico"
+            id="graficoVentas"
+            role="img"
+            aria-label="Gráfico de ventas de lunes a domingo"
+          ></div>
+
+        </article>
+
+
+        <!-- ALERTAS DE INVENTARIO -->
+        <article class="dashboard__tarjeta">
+
+          <div class="dashboard__tarjeta-encabezado">
+
+            <div>
+
+              <h2>Alertas de inventario</h2>
+
+              <p>Productos que requieren atención</p>
+
+            </div>
+
+            <a
+              href="inventario.html"
+              class="dashboard__enlace"
+            >
+              Ver todos
+            </a>
+
+          </div>
+
+
+          <!-- ALERTA 1 -->
+          <div class="alerta">
+
+            <div class="alerta__icono">
+
+              <i
+                data-lucide="package"
+                aria-hidden="true"
+              ></i>
+
+            </div>
+
+            <div class="alerta__informacion">
+
+              <strong>Queso campesino</strong>
+
+              <small>3,2 kg disponibles</small>
+
+            </div>
+
+            <span class="alerta__estado alerta__estado--bajo">
+              Stock bajo
+            </span>
+
+          </div>
+
+
+          <!-- ALERTA 2 -->
+          <div class="alerta">
+
+            <div class="alerta__icono">
+
+              <i
+                data-lucide="package"
+                aria-hidden="true"
+              ></i>
+
+            </div>
+
+            <div class="alerta__informacion">
+
+              <strong>Chorizo santarrosano</strong>
+
+              <small>8 unidades disponibles</small>
+
+            </div>
+
+            <span class="alerta__estado alerta__estado--bajo">
+              Stock bajo
+            </span>
+
+          </div>
+
+
+          <!-- ALERTA 3 -->
+          <div class="alerta">
+
+            <div class="alerta__icono">
+
+              <i
+                data-lucide="package"
+                aria-hidden="true"
+              ></i>
+
+            </div>
+
+            <div class="alerta__informacion">
+
+              <strong>Queso mozzarella</strong>
+
+              <small>Revisar fecha de vencimiento</small>
+
+            </div>
+
+            <span class="alerta__estado alerta__estado--vencer">
+              Por vencer
+            </span>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <!-- =====================================
+           VENTAS RECIENTES
+      ====================================== -->
+
+      <section
+        class="dashboard__tarjeta dashboard__ventas"
+        aria-label="Ventas recientes"
+      >
+
+        <div class="dashboard__tarjeta-encabezado">
+
+          <div>
+
+            <h2>Ventas recientes</h2>
+
+            <p>Últimos movimientos registrados</p>
+
+          </div>
+
+          <a
+            href="ventas.html"
+            class="dashboard__enlace"
+          >
+
+            Ver historial
+
+            <i
+              data-lucide="arrow-right"
+              aria-hidden="true"
+            ></i>
+
+          </a>
+
+        </div>
+
+
+        <!-- TABLA RESPONSIVE -->
+        <div class="dashboard__tabla-scroll">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th scope="col">VENTA</th>
+                <th scope="col">CLIENTE</th>
+                <th scope="col">FECHA</th>
+                <th scope="col">MEDIO DE PAGO</th>
+                <th scope="col">TOTAL</th>
+                <th scope="col">ACCIONES</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              <!-- VENTA 1 -->
+              <tr>
+
+                <td>
+                  <strong>V-1048</strong>
+                </td>
+
+                <td>María Rodríguez</td>
+
+                <td>Hoy, 10:42 a. m.</td>
+
+                <td>
+
+                  <span class="dashboard__pago">
+                    Efectivo
+                  </span>
+
+                </td>
+
+                <td>
+                  <strong>$86.400</strong>
+                </td>
+
+                <td>
+
+                  <button
+                    type="button"
+                    class="dashboard__accion"
+                    aria-label="Opciones de venta V-1048"
+                  >
+
+                    <i
+                      data-lucide="ellipsis"
+                      aria-hidden="true"
+                    ></i>
+
+                  </button>
+
+                </td>
+
+              </tr>
+
+
+              <!-- VENTA 2 -->
+              <tr>
+
+                <td>
+                  <strong>V-1047</strong>
+                </td>
+
+                <td>Tienda El Portal</td>
+
+                <td>Hoy, 9:18 a. m.</td>
+
+                <td>
+
+                  <span class="dashboard__pago dashboard__pago--credito">
+                    Crédito
+                  </span>
+
+                </td>
+
+                <td>
+                  <strong>$214.800</strong>
+                </td>
+
+                <td>
+
+                  <button
+                    type="button"
+                    class="dashboard__accion"
+                    aria-label="Opciones de venta V-1047"
+                  >
+
+                    <i
+                      data-lucide="ellipsis"
+                      aria-hidden="true"
+                    ></i>
+
+                  </button>
+
+                </td>
+
+              </tr>
+
+
+              <!-- VENTA 3 -->
+              <tr>
+
+                <td>
+                  <strong>V-1046</strong>
+                </td>
+
+                <td>Carlos Méndez</td>
+
+                <td>Ayer, 5:34 p. m.</td>
+
+                <td>
+
+                  <span class="dashboard__pago">
+                    Transferencia
+                  </span>
+
+                </td>
+
+                <td>
+                  <strong>$48.200</strong>
+                </td>
+
+                <td>
+
+                  <button
+                    type="button"
+                    class="dashboard__accion"
+                    aria-label="Opciones de venta V-1046"
+                  >
+
+                    <i
+                      data-lucide="ellipsis"
+                      aria-hidden="true"
+                    ></i>
+
+                  </button>
+
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+
+  <!-- =====================================
+       CAPA PARA MENÚ MÓVIL
+  ====================================== -->
+
+  <div
+    class="dashboard-overlay"
+    id="dashboardOverlay"
+    aria-hidden="true"
+  ></div>
+
+
+  <!-- =====================================
+       ICONOS LUCIDE
+  ====================================== -->
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+
+  <!-- =====================================
+       JAVASCRIPT DEL DASHBOARD
+  ====================================== -->
+
+  <script src="js/dashboard.js"></script>
+
+  <!-- Navegación y cierre de sesión -->
+  <script src="js/navegacion.js"></script>
+
+</body>
+</html>

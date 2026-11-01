@@ -1,0 +1,242 @@
+
+/* ==========================================
+   CARTERA - CUENTAS POR COBRAR
+========================================== */
+
+.cartera {
+  max-width: 1500px;
+  margin: 0 auto;
+
+  &__encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    h1 {
+      margin: 8px 0;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #17221d;
+    }
+
+    p:not(.dashboard__ruta) {
+      margin: 0;
+      font-size: .85rem;
+      color: #66766e;
+    }
+  }
+
+  &__boton-principal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 8px;
+    background: #155b3d;
+    color: white;
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover { background: #104b32; }
+    &:disabled { opacity: .55; cursor: not-allowed; }
+
+    svg { width: 16px; height: 16px; }
+  }
+
+  &__indicadores {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  &__indicador {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    min-width: 0;
+    background: #fff;
+    border: 1px solid #dfe6e1;
+    border-radius: 11px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.025);
+
+    p {
+      margin: 2px 0 5px;
+      font-size: .75rem;
+      color: #66766e;
+    }
+
+    strong {
+      display: block;
+      font-size: 1.3rem;
+      color: #17221d;
+    }
+
+    small {
+      display: block;
+      margin-top: 4px;
+      color: #155b3d;
+      font-size: .68rem;
+    }
+  }
+
+  &__indicador-icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background: #e8f4eb;
+    color: #155b3d;
+
+    svg { width: 19px; height: 19px; }
+
+    &--alerta {
+      background: #fff1d7;
+      color: #ca780e;
+    }
+
+    &--vencida {
+      background: #f9e9df;
+      color: #d36a29;
+    }
+  }
+
+  &__tarjeta {
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #dfe6e1;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.025);
+  }
+
+  &__tabla-encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 18px;
+
+    h2 {
+      margin: 0 0 5px;
+      font-size: .95rem;
+      font-weight: 600;
+      color: #17221d;
+    }
+
+    p {
+      margin: 0;
+      color: #66766e;
+      font-size: .72rem;
+    }
+
+    select {
+      height: 36px;
+      padding: 0 11px;
+      border: 1px solid #dfe6e1;
+      border-radius: 7px;
+      background: #fff;
+      color: #17221d;
+      font: inherit;
+      font-size: .75rem;
+    }
+  }
+
+  &__tabla-scroll { overflow-x: auto; }
+
+  &__tabla {
+    width: 100%;
+    min-width: 850px;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 14px 18px;
+      border-top: 1px solid #e8ece9;
+      text-align: left;
+      font-size: .75rem;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f8faf8;
+      color: #66766e;
+      font-size: .65rem;
+      font-weight: 600;
+    }
+
+    td { color: #17221d; }
+
+    tbody tr:hover { background: #fafcfb; }
+  }
+
+  &__cliente,
+  &__saldo {
+    font-weight: 600;
+  }
+
+  &__estado {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: .68rem;
+    font-weight: 600;
+
+    &--pendiente {
+      background: #fff0d8;
+      color: #b96b0d;
+    }
+
+    &--vencida {
+      background: #fde9e6;
+      color: #bf4236;
+    }
+  }
+
+  &__abonar {
+    border: 0;
+    background: transparent;
+    color: #155b3d;
+    font: inherit;
+    font-size: .75rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover { text-decoration: underline; }
+  }
+
+  &__sin-resultados {
+    padding: 22px;
+    text-align: center;
+    color: #66766e;
+    font-size: .8rem;
+
+    &[hidden] { display: none; }
+  }
+}
+
+@media (max-width: 900px) {
+  .cartera__indicadores {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .cartera {
+    &__encabezado,
+    &__tabla-encabezado {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+}

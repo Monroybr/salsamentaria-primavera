@@ -1,0 +1,357 @@
+
+{% extends "base.njk" %}
+
+{% block titulo %}
+Productos | Salsamentaria Primavera
+{% endblock %}
+
+{% block clase_body %}productos-page{% endblock %}
+
+{% block contenido %}
+
+<main class="dashboard productos">
+
+  <!-- ======================================
+       ENCABEZADO
+  ======================================= -->
+
+  <div class="productos__encabezado">
+
+    <div>
+      <p class="dashboard__ruta">
+        Salsamentaria Primavera / Productos
+      </p>
+
+      <h1>Productos</h1>
+
+      <p>
+        Administra el catálogo y sus presentaciones.
+      </p>
+    </div>
+
+    <a
+      href="nuevo-producto.html"
+      class="dashboard__nueva-venta"
+    >
+      <i data-lucide="plus" aria-hidden="true"></i>
+      <span>Nuevo producto</span>
+    </a>
+
+  </div>
+
+  <!-- ======================================
+       FILTROS
+  ======================================= -->
+
+  <div class="productos__filtros">
+
+    <label class="productos__busqueda">
+
+      <i data-lucide="search" aria-hidden="true"></i>
+
+      <input
+        type="search"
+        id="buscarProducto"
+        placeholder="Buscar por nombre, categoría o código..."
+        aria-label="Buscar productos"
+      >
+
+    </label>
+
+    <select
+      id="filtroCategoria"
+      aria-label="Filtrar por categoría"
+    >
+      <option value="todos">Todas las categorías</option>
+      <option value="granos">Granos y harinas</option>
+      <option value="lacteos">Lácteos</option>
+      <option value="carnicos">Cárnicos</option>
+      <option value="embutidos">Embutidos</option>
+      <option value="jamones">Jamones</option>
+      <option value="mortadelas">Mortadelas</option>
+    </select>
+
+    <select
+      id="filtroEstado"
+      aria-label="Filtrar por estado"
+    >
+      <option value="todos">Todos los estados</option>
+      <option value="disponible">Disponible</option>
+      <option value="bajo">Stock bajo</option>
+      <option value="inactivo">Inactivo</option>
+    </select>
+
+  </div>
+
+  <!-- ======================================
+       LISTADO DE PRODUCTOS
+  ======================================= -->
+
+  <section
+    class="productos__tarjeta"
+    aria-label="Listado de productos"
+  >
+
+    <div class="productos__tabla-scroll">
+
+      <table class="productos__tabla">
+
+        <thead>
+          <tr>
+            <th>PRODUCTO</th>
+            <th>CÓDIGO</th>
+            <th>CATEGORÍA</th>
+            <th>EXISTENCIAS</th>
+            <th>PRECIO DE VENTA</th>
+            <th>ESTADO</th>
+            <th>ACCIONES</th>
+          </tr>
+        </thead>
+
+        <tbody id="tablaProductos">
+
+          <!-- PRODUCTO 1 -->
+          <tr
+            data-nombre="Jamón de cerdo premium"
+            data-codigo="SAL-001"
+            data-categoria="jamones"
+            data-estado="disponible"
+          >
+
+            <td>
+              <div class="productos__nombre">
+                <span class="productos__icono">
+                  <i data-lucide="package"></i>
+                </span>
+                <strong>Jamón de cerdo premium</strong>
+              </div>
+            </td>
+
+            <td>SAL-001</td>
+            <td>Jamones</td>
+            <td><strong>18.5 kg</strong></td>
+            <td>$28.500</td>
+
+            <td>
+              <span class="productos__estado productos__estado--disponible">
+                Disponible
+              </span>
+            </td>
+
+            <td>
+              <button
+                class="productos__accion"
+                type="button"
+                aria-label="Opciones de Jamón de cerdo premium"
+              >
+                <i data-lucide="ellipsis"></i>
+              </button>
+            </td>
+
+          </tr>
+
+          <!-- PRODUCTO 2 -->
+          <tr
+            data-nombre="Queso campesino"
+            data-codigo="LAC-014"
+            data-categoria="lacteos"
+            data-estado="bajo"
+          >
+
+            <td>
+              <div class="productos__nombre">
+                <span class="productos__icono">
+                  <i data-lucide="package"></i>
+                </span>
+                <strong>Queso campesino</strong>
+              </div>
+            </td>
+
+            <td>LAC-014</td>
+            <td>Lácteos</td>
+            <td><strong>3.2 kg</strong></td>
+            <td>$19.800</td>
+
+            <td>
+              <span class="productos__estado productos__estado--bajo">
+                Stock bajo
+              </span>
+            </td>
+
+            <td>
+              <button
+                class="productos__accion"
+                type="button"
+                aria-label="Opciones de Queso campesino"
+              >
+                <i data-lucide="ellipsis"></i>
+              </button>
+            </td>
+
+          </tr>
+
+          <!-- PRODUCTO 3 -->
+          <tr
+            data-nombre="Salchicha ranchera"
+            data-codigo="EMB-008"
+            data-categoria="embutidos"
+            data-estado="disponible"
+          >
+
+            <td>
+              <div class="productos__nombre">
+                <span class="productos__icono">
+                  <i data-lucide="package"></i>
+                </span>
+                <strong>Salchicha ranchera</strong>
+              </div>
+            </td>
+
+            <td>EMB-008</td>
+            <td>Embutidos</td>
+            <td><strong>24 und</strong></td>
+            <td>$12.400</td>
+
+            <td>
+              <span class="productos__estado productos__estado--disponible">
+                Disponible
+              </span>
+            </td>
+
+            <td>
+              <button
+                class="productos__accion"
+                type="button"
+                aria-label="Opciones de Salchicha ranchera"
+              >
+                <i data-lucide="ellipsis"></i>
+              </button>
+            </td>
+
+          </tr>
+
+          <!-- PRODUCTO 4 -->
+          <tr
+            data-nombre="Chorizo santarrosano"
+            data-codigo="EMB-011"
+            data-categoria="embutidos"
+            data-estado="bajo"
+          >
+
+            <td>
+              <div class="productos__nombre">
+                <span class="productos__icono">
+                  <i data-lucide="package"></i>
+                </span>
+                <strong>Chorizo santarrosano</strong>
+              </div>
+            </td>
+
+            <td>EMB-011</td>
+            <td>Embutidos</td>
+            <td><strong>8 und</strong></td>
+            <td>$16.900</td>
+
+            <td>
+              <span class="productos__estado productos__estado--bajo">
+                Stock bajo
+              </span>
+            </td>
+
+            <td>
+              <button
+                class="productos__accion"
+                type="button"
+                aria-label="Opciones de Chorizo santarrosano"
+              >
+                <i data-lucide="ellipsis"></i>
+              </button>
+            </td>
+
+          </tr>
+
+          <!-- PRODUCTO 5 -->
+          <tr
+            data-nombre="Mortadela tradicional"
+            data-codigo="SAL-022"
+            data-categoria="mortadelas"
+            data-estado="disponible"
+          >
+
+            <td>
+              <div class="productos__nombre">
+                <span class="productos__icono">
+                  <i data-lucide="package"></i>
+                </span>
+                <strong>Mortadela tradicional</strong>
+              </div>
+            </td>
+
+            <td>SAL-022</td>
+            <td>Mortadelas</td>
+            <td><strong>12.7 kg</strong></td>
+            <td>$17.600</td>
+
+            <td>
+              <span class="productos__estado productos__estado--disponible">
+                Disponible
+              </span>
+            </td>
+
+            <td>
+              <button
+                class="productos__accion"
+                type="button"
+                aria-label="Opciones de Mortadela tradicional"
+              >
+                <i data-lucide="ellipsis"></i>
+              </button>
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <!-- MENSAJE SIN RESULTADOS -->
+    <p
+      class="productos__sin-resultados"
+      id="sinResultados"
+      hidden
+    >
+      No se encontraron productos con esos filtros.
+    </p>
+
+    <!-- ======================================
+         PAGINACIÓN
+    ======================================= -->
+
+    <div class="productos__paginacion">
+
+      <span id="resumenProductos">
+        Mostrando 1–5 de 5 registros
+      </span>
+
+      <nav
+        class="productos__paginas"
+        id="paginacionProductos"
+        aria-label="Paginación de productos"
+      ></nav>
+
+    </div>
+
+  </section>
+
+</main>
+
+{% endblock %}
+
+{% block scripts %}
+
+<!-- Funciones del módulo Productos -->
+<script src="js/productos.js"></script>
+
+{% endblock %}

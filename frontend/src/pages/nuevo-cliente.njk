@@ -1,0 +1,311 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo cliente | Salsamentaria Primavera</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="dashboard-page clientes-page">
+
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+    {% include "header.njk" %}
+
+    <main class="dashboard nuevo-cliente">
+
+      <!-- Encabezado -->
+      <div class="nuevo-cliente__encabezado">
+        <a href="clientes.html"
+           class="nuevo-cliente__volver"
+           aria-label="Regresar a clientes">
+          <i data-lucide="chevron-left"></i>
+        </a>
+
+        <div>
+          <p class="dashboard__ruta">Clientes / Nuevo cliente</p>
+          <h1 id="tituloFormularioCliente">Nuevo cliente</h1>
+          <p>Registra los datos de contacto y condiciones comerciales.</p>
+        </div>
+      </div>
+
+      <form id="formNuevoCliente" class="nuevo-cliente__layout">
+
+        <!-- Columna izquierda -->
+        <div class="nuevo-cliente__principal">
+
+          <!-- Sección 1 -->
+          <section class="nuevo-cliente__tarjeta">
+
+            <div class="nuevo-cliente__seccion">
+              <span class="nuevo-cliente__numero">1</span>
+              <div>
+                <h2>Información del cliente</h2>
+                <p>Selecciona el tipo de cliente e ingresa sus datos principales.</p>
+              </div>
+            </div>
+
+            <label class="nuevo-cliente__etiqueta">
+              Tipo de cliente
+            </label>
+
+            <div class="nuevo-cliente__tipos">
+
+              <label class="nuevo-cliente__tipo">
+                <input type="radio"
+                       name="tipoCliente"
+                       value="natural">
+
+                <i data-lucide="user-round"></i>
+
+                <span>
+                  <strong>Persona natural</strong>
+                  <small>Cliente individual</small>
+                </span>
+              </label>
+
+              <label class="nuevo-cliente__tipo activo">
+                <input type="radio"
+                       name="tipoCliente"
+                       value="negocio"
+                       checked>
+
+                <i data-lucide="store"></i>
+
+                <span>
+                  <strong>Negocio o empresa</strong>
+                  <small>Tienda, restaurante o comercio</small>
+                </span>
+              </label>
+
+            </div>
+
+            <div class="nuevo-cliente__campo">
+              <label for="nombreCliente" id="etiquetaNombreCliente">
+                Nombre del negocio
+              </label>
+              <input id="nombreCliente"
+                     type="text"
+                     maxlength="120"
+                     placeholder="Ej. Tienda La Primavera"
+                     required>
+            </div>
+
+            <div class="nuevo-cliente__fila">
+
+              <div class="nuevo-cliente__campo">
+                <label for="contactoCliente">Persona de contacto</label>
+                <input id="contactoCliente"
+                       type="text"
+                       maxlength="100"
+                       placeholder="Nombre del responsable"
+                       required>
+              </div>
+
+              <div class="nuevo-cliente__campo">
+                <label for="documentoCliente" id="etiquetaDocumentoCliente">
+                  NIT
+                </label>
+                <input id="documentoCliente"
+                       type="text"
+                       maxlength="25"
+                       placeholder="900000000-1">
+              </div>
+
+            </div>
+
+            <div class="nuevo-cliente__fila">
+
+              <div class="nuevo-cliente__campo">
+                <label for="telefonoCliente">Teléfono</label>
+                <input id="telefonoCliente"
+                       type="tel"
+                       maxlength="20"
+                       placeholder="300 000 0000"
+                       required>
+              </div>
+
+              <div class="nuevo-cliente__campo">
+                <label for="correoCliente">
+                  Correo electrónico (opcional)
+                </label>
+                <input id="correoCliente"
+                       type="email"
+                       maxlength="120"
+                       placeholder="cliente@correo.com">
+              </div>
+
+            </div>
+
+          </section>
+
+          <!-- Sección 2 -->
+          <section class="nuevo-cliente__tarjeta">
+
+            <div class="nuevo-cliente__seccion">
+              <span class="nuevo-cliente__numero">2</span>
+              <div>
+                <h2>Ubicación y notas</h2>
+                <p>Información para entregas y seguimiento comercial.</p>
+              </div>
+            </div>
+
+            <div class="nuevo-cliente__campo">
+              <label for="direccionCliente">Dirección</label>
+              <input id="direccionCliente"
+                     type="text"
+                     maxlength="180"
+                     placeholder="Calle, carrera, número y barrio">
+            </div>
+
+            <div class="nuevo-cliente__fila">
+
+              <div class="nuevo-cliente__campo">
+                <label for="ciudadCliente">Ciudad o municipio</label>
+                <input id="ciudadCliente"
+                       type="text"
+                       maxlength="80"
+                       placeholder="Ej. Medellín">
+              </div>
+
+              <div class="nuevo-cliente__campo">
+                <label for="barrioCliente">Barrio o sector</label>
+                <input id="barrioCliente"
+                       type="text"
+                       maxlength="80"
+                       placeholder="Ej. Laureles">
+              </div>
+
+            </div>
+
+            <div class="nuevo-cliente__campo">
+              <label for="notasCliente">Notas (opcional)</label>
+              <textarea id="notasCliente"
+                        rows="4"
+                        maxlength="500"
+                        placeholder="Horarios de entrega, preferencias u otra información relevante..."></textarea>
+            </div>
+
+          </section>
+
+          <!-- Sección 3 -->
+          <section class="nuevo-cliente__tarjeta">
+
+            <div class="nuevo-cliente__seccion">
+              <span class="nuevo-cliente__numero">3</span>
+              <div>
+                <h2>Condiciones de crédito</h2>
+                <p>Define si el cliente puede realizar compras a crédito.</p>
+              </div>
+            </div>
+
+            <label class="nuevo-cliente__credito">
+              <span>
+                <strong>Habilitar ventas a crédito</strong>
+                <small>Permite generar cuentas por cobrar para este cliente.</small>
+              </span>
+
+              <input id="habilitarCredito"
+                     type="checkbox"
+                     checked>
+              <span class="nuevo-cliente__interruptor"></span>
+            </label>
+
+            <div class="nuevo-cliente__fila"
+                 id="camposCredito">
+
+              <div class="nuevo-cliente__campo">
+                <label for="cupoCredito">Cupo máximo</label>
+                <input id="cupoCredito"
+                       type="number"
+                       min="0"
+                       step="1000"
+                       value="500000">
+              </div>
+
+              <div class="nuevo-cliente__campo">
+                <label for="plazoCredito">Plazo de pago</label>
+                <select id="plazoCredito">
+                  <option value="8">8 días</option>
+                  <option value="15" selected>15 días</option>
+                  <option value="30">30 días</option>
+                  <option value="45">45 días</option>
+                </select>
+              </div>
+
+            </div>
+
+          </section>
+
+        </div>
+
+        <!-- Columna derecha -->
+        <aside class="nuevo-cliente__lateral">
+
+          <section class="nuevo-cliente__tarjeta nuevo-cliente__resumen">
+
+            <div class="nuevo-cliente__resumen-icono">
+              <i data-lucide="store"></i>
+            </div>
+
+            <h2 id="nombreResumenCliente">Nuevo cliente</h2>
+            <p>Negocio o empresa</p>
+
+            <div class="nuevo-cliente__resumen-fila">
+              <span>Estado</span>
+              <strong class="nuevo-cliente__estado">Activo</strong>
+            </div>
+
+            <div class="nuevo-cliente__resumen-fila">
+              <span>Crédito</span>
+              <strong id="resumenCredito">Habilitado</strong>
+            </div>
+
+            <div class="nuevo-cliente__resumen-fila">
+              <span>Saldo inicial</span>
+              <strong>$0</strong>
+            </div>
+
+          </section>
+
+          <section class="nuevo-cliente__tarjeta nuevo-cliente__acciones">
+
+            <button type="submit"
+                    id="guardarCliente"
+                    class="clientes__boton-principal">
+              <i data-lucide="check-circle"></i>
+              <span id="textoGuardarCliente">Guardar cliente</span>
+            </button>
+
+            <a href="clientes.html">Cancelar</a>
+
+            <p id="mensajeCliente"
+               role="status"
+               hidden></p>
+
+            <small>
+              El cliente quedará disponible para las ventas y la cartera.
+            </small>
+
+          </section>
+
+        </aside>
+
+      </form>
+
+    </main>
+  </div>
+
+  <div class="dashboard-overlay"
+       id="dashboardOverlay"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/nuevo-cliente.js"></script>
+
+</body>
+</html>

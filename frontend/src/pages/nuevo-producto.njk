@@ -1,0 +1,355 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Nuevo producto | Salsamentaria Primavera</title>
+
+  <!-- Estilos generales del sistema -->
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="dashboard-page nuevo-producto-page">
+
+  <!-- Menú lateral -->
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+
+    <!-- Encabezado del sistema -->
+    {% include "header.njk" %}
+
+    <main class="dashboard nuevo-producto">
+
+      <!-- Título y botón para regresar -->
+      <div class="nuevo-producto__encabezado">
+
+        <a href="productos.html"
+           class="nuevo-producto__volver"
+           aria-label="Volver a productos">
+          <i data-lucide="chevron-left"></i>
+        </a>
+
+        <div>
+          <p class="dashboard__ruta">
+            Productos / Nuevo producto
+          </p>
+
+          <h1>Nuevo producto</h1>
+
+          <p>Registra la información comercial y de inventario.</p>
+        </div>
+
+      </div>
+
+      <!-- Formulario principal -->
+      <form id="formNuevoProducto" class="nuevo-producto__layout">
+
+        <div class="nuevo-producto__secciones">
+
+          <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
+          <section class="nuevo-producto__tarjeta">
+
+            <div class="nuevo-producto__titulo">
+              <span class="nuevo-producto__numero">1</span>
+
+              <div>
+                <h2>Información básica</h2>
+                <p>Datos para identificar el producto en el sistema.</p>
+              </div>
+            </div>
+
+            <div class="nuevo-producto__campos">
+
+              <div class="nuevo-producto__campo nuevo-producto__campo--completo">
+                <label for="nombreProducto">Nombre del producto *</label>
+                <input
+                  type="text"
+                  id="nombreProducto"
+                  name="nombre"
+                  placeholder="Ej. Harina de trigo premium"
+                  maxlength="100"
+                  required>
+              </div>
+
+              <div class="nuevo-producto__campo">
+                <label for="codigoProducto">Código o SKU *</label>
+                <input
+                  type="text"
+                  id="codigoProducto"
+                  name="codigo"
+                  placeholder="Ej. GRA-025"
+                  maxlength="30"
+                  required>
+              </div>
+
+              <div class="nuevo-producto__campo">
+                <label for="categoriaProducto">Categoría *</label>
+                <select id="categoriaProducto" name="categoria" required>
+                  <option value="">Seleccionar categoría...</option>
+                  <option value="Granos y harinas">Granos y harinas</option>
+                  <option value="Lácteos">Lácteos</option>
+                  <option value="Cárnicos">Cárnicos</option>
+                  <option value="Embutidos">Embutidos</option>
+                  <option value="Jamones">Jamones</option>
+                  <option value="Mortadelas">Mortadelas</option>
+                  <option value="Otros">Otros</option>
+                </select>
+              </div>
+
+              <div class="nuevo-producto__campo nuevo-producto__campo--completo">
+                <label for="descripcionProducto">Descripción (opcional)</label>
+                <textarea
+                  id="descripcionProducto"
+                  name="descripcion"
+                  rows="3"
+                  maxlength="500"
+                  placeholder="Agrega detalles relevantes del producto..."></textarea>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- SECCIÓN 2: INVENTARIO Y PRESENTACIÓN -->
+          <section class="nuevo-producto__tarjeta">
+
+            <div class="nuevo-producto__titulo">
+              <span class="nuevo-producto__numero">2</span>
+
+              <div>
+                <h2>Inventario y presentación</h2>
+                <p>Define cómo se controlarán sus existencias.</p>
+              </div>
+            </div>
+
+            <div class="nuevo-producto__campos">
+
+              <!-- Selección del tipo de producto -->
+              <fieldset class="nuevo-producto__tipos">
+
+                <legend>Tipo de producto *</legend>
+
+                <div class="nuevo-producto__opciones">
+
+                  <label class="nuevo-producto__opcion nuevo-producto__opcion--activa">
+                    <input type="radio"
+                           name="tipoProducto"
+                           value="granel"
+                           checked>
+
+                    <i data-lucide="scale"></i>
+
+                    <span>
+                      <strong>A granel</strong>
+                      <small>Se controla por peso y puede fraccionarse.</small>
+                    </span>
+                  </label>
+
+                  <label class="nuevo-producto__opcion">
+                    <input type="radio"
+                           name="tipoProducto"
+                           value="empacado">
+
+                    <i data-lucide="archive"></i>
+
+                    <span>
+                      <strong>Empacado</strong>
+                      <small>Se controla por unidades o paquetes.</small>
+                    </span>
+                  </label>
+
+                </div>
+
+              </fieldset>
+
+              <div class="nuevo-producto__campo">
+                <label for="unidadProducto">Unidad de medida *</label>
+
+                <select id="unidadProducto" name="unidad" required>
+                  <option value="kg">Kilogramos (kg)</option>
+                  <option value="g">Gramos (g)</option>
+                  <option value="lb">Libras (lb)</option>
+                </select>
+              </div>
+
+              <div class="nuevo-producto__campo">
+                <label for="existenciaProducto">Existencia inicial *</label>
+
+                <input type="number"
+                       id="existenciaProducto"
+                       name="existencia"
+                       min="0"
+                       step="0.001"
+                       value="0"
+                       required>
+              </div>
+
+              <div class="nuevo-producto__campo">
+                <label for="stockMinimo">Stock mínimo *</label>
+
+                <input type="number"
+                       id="stockMinimo"
+                       name="stockMinimo"
+                       min="0"
+                       step="0.001"
+                       value="0"
+                       required>
+              </div>
+
+              <div class="nuevo-producto__campo">
+                <label for="proveedorProducto">Proveedor (opcional)</label>
+
+                <input type="text"
+                       id="proveedorProducto"
+                       name="proveedor"
+                       maxlength="100"
+                       placeholder="Nombre del proveedor">
+              </div>
+
+              <div class="nuevo-producto__aviso" id="avisoPresentacion">
+                <i data-lucide="check-circle-2"></i>
+
+                <span>
+                  <strong>Disponible para fraccionamiento</strong>
+                  <small>
+                    Este producto podrá convertirse posteriormente
+                    en presentaciones de diferentes cantidades.
+                  </small>
+                </span>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- SECCIÓN 3: PRECIOS -->
+          <section class="nuevo-producto__tarjeta">
+
+            <div class="nuevo-producto__titulo">
+              <span class="nuevo-producto__numero">3</span>
+
+              <div>
+                <h2>Precios</h2>
+                <p>Configura los valores de compra y venta.</p>
+              </div>
+            </div>
+
+            <div class="nuevo-producto__campos">
+
+              <div class="nuevo-producto__campo">
+                <label for="precioCompra">Precio de compra *</label>
+
+                <div class="nuevo-producto__precio">
+                  <span>$</span>
+                  <input type="number"
+                         id="precioCompra"
+                         name="precioCompra"
+                         min="0"
+                         step="0.01"
+                         placeholder="0"
+                         required>
+                </div>
+              </div>
+
+              <div class="nuevo-producto__campo">
+                <label for="precioVenta">Precio de venta *</label>
+
+                <div class="nuevo-producto__precio">
+                  <span>$</span>
+                  <input type="number"
+                         id="precioVenta"
+                         name="precioVenta"
+                         min="0"
+                         step="0.01"
+                         placeholder="0"
+                         required>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+        </div>
+
+        <!-- PANEL DERECHO -->
+        <aside class="nuevo-producto__lateral">
+
+          <!-- Vista previa -->
+          <section class="nuevo-producto__tarjeta nuevo-producto__vista">
+
+            <div class="nuevo-producto__vista-icono">
+              <i data-lucide="package"></i>
+            </div>
+
+            <h2 id="vistaNombre">Vista del producto</h2>
+
+            <p>
+              La información aparecerá aquí después de guardar.
+            </p>
+
+            <div class="nuevo-producto__detalle">
+              <span>Estado</span>
+              <strong class="nuevo-producto__activo">Activo</strong>
+            </div>
+
+            <div class="nuevo-producto__detalle">
+              <span>Tipo</span>
+              <strong id="vistaTipo">A granel</strong>
+            </div>
+
+            <div class="nuevo-producto__detalle">
+              <span>Inventario</span>
+              <strong id="vistaInventario">0 kg</strong>
+            </div>
+
+          </section>
+
+          <!-- Acciones del formulario -->
+          <section class="nuevo-producto__tarjeta nuevo-producto__acciones">
+
+            <button type="submit"
+                    class="nuevo-producto__guardar">
+              <i data-lucide="check-circle-2"></i>
+              Guardar producto
+            </button>
+
+            <a href="productos.html"
+               class="nuevo-producto__cancelar">
+              Cancelar
+            </a>
+
+            <p>
+              Los campos marcados con * son necesarios
+              para crear el producto.
+            </p>
+
+            <p id="mensajeProducto"
+               class="nuevo-producto__mensaje"
+               role="status"
+               aria-live="polite"></p>
+
+          </section>
+
+        </aside>
+
+      </form>
+
+    </main>
+
+  </div>
+
+  <!-- Fondo del menú en dispositivos móviles -->
+  <div class="dashboard-overlay" id="dashboardOverlay"></div>
+
+  <!-- Biblioteca de iconos -->
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+  <!-- Funciones del sistema -->
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/nuevo-producto.js"></script>
+
+</body>
+</html>

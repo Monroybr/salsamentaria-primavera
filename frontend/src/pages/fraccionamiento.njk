@@ -1,0 +1,329 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Fraccionamiento | Salsamentaria Primavera</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="dashboard-page fraccionamiento-page">
+
+  <!-- Menú lateral -->
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+
+    <!-- Encabezado principal -->
+    {% include "header.njk" %}
+
+    <main class="dashboard fraccionamiento">
+
+      <!-- Título de la página -->
+      <div class="fraccionamiento__encabezado">
+        <div>
+          <p class="dashboard__ruta">
+            Salsamentaria Primavera / Fraccionamiento
+          </p>
+          <h1>Fraccionamiento</h1>
+          <p>Convierte productos a granel en presentaciones listas para la venta.</p>
+        </div>
+
+        <a href="historial-fraccionamientos.html"
+           class="fraccionamiento__boton-historial">
+          <i data-lucide="archive"></i>
+          Ver historial
+        </a>
+      </div>
+
+      <!-- Formulario y resumen -->
+      <div class="fraccionamiento__distribucion">
+
+        <form id="formFraccionamiento"
+              class="fraccionamiento__formulario">
+
+          <section class="fraccionamiento__tarjeta">
+
+            <!-- Sección 1 -->
+            <div class="fraccionamiento__seccion">
+              <span class="fraccionamiento__numero">1</span>
+              <div>
+                <h2>Producto y cantidad</h2>
+                <p>Selecciona el producto a granel que vas a utilizar.</p>
+              </div>
+            </div>
+
+            <div class="fraccionamiento__campo">
+              <label for="productoFraccionamiento">
+                Producto a granel
+              </label>
+
+              <select id="productoFraccionamiento" required>
+                <option value="harina">Harina de trigo</option>
+                <option value="mantequilla">Mantequilla</option>
+                <option value="maiz">Maíz trillado</option>
+              </select>
+            </div>
+
+            <div class="fraccionamiento__fila">
+
+              <div class="fraccionamiento__campo">
+                <label for="cantidadUtilizada">
+                  Cantidad utilizada
+                </label>
+
+                <div class="fraccionamiento__input-unidad">
+                  <input type="number"
+                         id="cantidadUtilizada"
+                         min="0.001"
+                         step="0.001"
+                         value="5"
+                         required>
+                  <span>kg</span>
+                </div>
+              </div>
+
+              <div class="fraccionamiento__existencia">
+                <div>
+                  <span>Existencia disponible</span>
+                  <strong id="existenciaDisponible">42 kg</strong>
+                </div>
+                <small>Inventario a granel</small>
+              </div>
+
+            </div>
+
+            <hr class="fraccionamiento__separador">
+
+            <!-- Sección 2 -->
+            <div class="fraccionamiento__seccion">
+              <span class="fraccionamiento__numero">2</span>
+              <div>
+                <h2>Presentación generada</h2>
+                <p>Indica el tamaño de las bolsas y la cantidad obtenida.</p>
+              </div>
+            </div>
+
+            <fieldset class="fraccionamiento__presentaciones">
+              <legend class="fraccionamiento__sr-only">
+                Seleccionar presentación
+              </legend>
+
+              <label class="fraccionamiento__opcion">
+                <input type="radio"
+                       name="presentacion"
+                       value="250">
+                <span>
+                  <strong>Media libra</strong>
+                  <small>250 g</small>
+                </span>
+              </label>
+
+              <label class="fraccionamiento__opcion">
+                <input type="radio"
+                       name="presentacion"
+                       value="500"
+                       checked>
+                <span>
+                  <strong>Una libra</strong>
+                  <small>500 g</small>
+                </span>
+              </label>
+
+              <label class="fraccionamiento__opcion">
+                <input type="radio"
+                       name="presentacion"
+                       value="1000">
+                <span>
+                  <strong>Un kilogramo</strong>
+                  <small>1000 g</small>
+                </span>
+              </label>
+            </fieldset>
+
+            <div class="fraccionamiento__campo">
+              <label for="bolsasGeneradas">
+                Cantidad de bolsas generadas
+              </label>
+
+              <div class="fraccionamiento__input-unidad">
+                <input type="number"
+                       id="bolsasGeneradas"
+                       min="1"
+                       step="1"
+                       value="10"
+                       required>
+                <span>bolsas</span>
+              </div>
+            </div>
+
+            <div class="fraccionamiento__campo">
+              <label for="observacionesFraccionamiento">
+                Observaciones (opcional)
+              </label>
+
+              <textarea id="observacionesFraccionamiento"
+                        rows="3"
+                        placeholder="Ej. Lote empacado para venta de fin de semana"></textarea>
+            </div>
+
+            <div class="fraccionamiento__acciones">
+              <button type="reset"
+                      class="fraccionamiento__cancelar">
+                Cancelar
+              </button>
+
+              <button type="submit"
+                      class="fraccionamiento__guardar"
+                      id="guardarFraccionamiento">
+                <i data-lucide="check-circle-2"></i>
+                Registrar fraccionamiento
+              </button>
+            </div>
+
+            <p id="mensajeFraccionamiento"
+               class="fraccionamiento__mensaje"
+               role="status"
+               aria-live="polite"
+               hidden></p>
+
+          </section>
+        </form>
+
+        <!-- Resumen lateral -->
+        <aside class="fraccionamiento__lateral">
+
+          <section class="fraccionamiento__tarjeta">
+
+            <div class="fraccionamiento__icono-resumen">
+              <i data-lucide="scale"></i>
+            </div>
+
+            <h2>Resumen de la operación</h2>
+            <p class="fraccionamiento__ayuda">
+              Verifica las cantidades antes de registrar.
+            </p>
+
+            <div class="fraccionamiento__producto-resumen">
+              <small>PRODUCTO</small>
+              <strong id="resumenProductoFraccionamiento">
+                Harina de trigo
+              </strong>
+            </div>
+
+            <div class="fraccionamiento__dato">
+              <span>Cantidad utilizada</span>
+              <strong id="resumenCantidadUtilizada">5 kg</strong>
+            </div>
+
+            <div class="fraccionamiento__dato">
+              <span>Presentación</span>
+              <strong id="resumenPresentacion">500 g</strong>
+            </div>
+
+            <div class="fraccionamiento__dato">
+              <span>Bolsas generadas</span>
+              <strong id="resumenBolsas">10 und</strong>
+            </div>
+
+            <div class="fraccionamiento__dato">
+              <span>Peso empacado</span>
+              <strong id="resumenPeso">5 kg</strong>
+            </div>
+
+            <div class="fraccionamiento__diferencia">
+              <span>Diferencia por validar</span>
+              <strong id="resumenDiferencia">0 kg</strong>
+            </div>
+
+            <small class="fraccionamiento__nota">
+              La diferencia puede corresponder a merma o a una
+              inconsistencia en las cantidades.
+            </small>
+
+          </section>
+
+          <section class="fraccionamiento__tarjeta fraccionamiento__informacion">
+            <i data-lucide="info"></i>
+            <div>
+              <strong>¿Cómo funciona?</strong>
+              <p>
+                Al registrar, se descontará la cantidad usada del
+                producto a granel y se sumarán las bolsas a la
+                presentación seleccionada.
+              </p>
+            </div>
+          </section>
+
+        </aside>
+      </div>
+
+      <!-- Operaciones recientes -->
+      <section class="fraccionamiento__tarjeta fraccionamiento__recientes">
+
+        <div class="fraccionamiento__recientes-titulo">
+          <div>
+            <h2>Fraccionamientos recientes</h2>
+            <p>Últimas operaciones registradas</p>
+          </div>
+
+          <a href="historial-fraccionamientos.html">
+            Ver todos
+            <i data-lucide="arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="fraccionamiento__tabla-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>OPERACIÓN</th>
+                <th>PRODUCTO</th>
+                <th>CANTIDAD USADA</th>
+                <th>PRESENTACIÓN</th>
+                <th>BOLSAS</th>
+                <th>FECHA</th>
+                <th>RESPONSABLE</th>
+              </tr>
+            </thead>
+            <tbody id="tablaFraccionamientosRecientes">
+              <tr>
+                <td><strong>F-0038</strong></td>
+                <td>Maíz trillado</td>
+                <td>4 kg</td>
+                <td>Una libra</td>
+                <td>8</td>
+                <td>Hoy, 8:32 a. m.</td>
+                <td>Carlos Rojas</td>
+              </tr>
+              <tr>
+                <td><strong>F-0037</strong></td>
+                <td>Mantequilla</td>
+                <td>6 kg</td>
+                <td>Media libra</td>
+                <td>24</td>
+                <td>Ayer, 4:15 p. m.</td>
+                <td>Ana Martínez</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Capa para el menú móvil -->
+  <div class="dashboard-overlay" id="dashboardOverlay"></div>
+
+  <!-- Iconos y JavaScript -->
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/fraccionamiento.js"></script>
+
+</body>
+</html>

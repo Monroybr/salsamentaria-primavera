@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuarios y permisos | Salsamentaria Primavera</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="dashboard-page usuarios-page">
+
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+    {% include "header.njk" %}
+
+    <main class="dashboard usuarios">
+
+      <!-- Encabezado -->
+      <div class="usuarios__encabezado">
+        <div>
+          <p class="dashboard__ruta">
+            Salsamentaria Primavera / Usuarios y permisos
+          </p>
+          <h1>Usuarios y permisos</h1>
+          <p>Administra quién puede acceder al sistema.</p>
+        </div>
+
+        <a href="nuevo-usuario.html" class="usuarios__boton">
+          <i data-lucide="plus"></i>
+          Nuevo usuario
+        </a>
+      </div>
+
+      <!-- Pestañas -->
+      <div class="usuarios__pestanas" role="tablist">
+        <button
+          id="tabUsuarios"
+          class="usuarios__pestana usuarios__pestana--activa"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="panelUsuarios">
+          Usuarios
+        </button>
+
+        <button
+          id="tabRoles"
+          class="usuarios__pestana"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="panelRoles">
+          Roles y permisos
+        </button>
+      </div>
+
+      <!-- Panel: usuarios -->
+      <section id="panelUsuarios" role="tabpanel">
+        <div class="usuarios__tabla-contenedor">
+          <table class="usuarios__tabla">
+            <thead>
+              <tr>
+                <th>USUARIO</th>
+                <th>CORREO ELECTRÓNICO</th>
+                <th>ROL</th>
+                <th>ÚLTIMO ACCESO</th>
+                <th>ESTADO</th>
+                <th aria-label="Acciones"></th>
+              </tr>
+            </thead>
+
+            <tbody id="tablaUsuarios"></tbody>
+          </table>
+
+          <p class="usuarios__vacio" id="sinUsuarios" hidden>
+            No hay usuarios registrados.
+          </p>
+        </div>
+      </section>
+
+      <!-- Panel: roles y permisos -->
+      <section id="panelRoles" role="tabpanel" hidden>
+        <div class="usuarios__roles">
+
+          <article class="usuarios__rol-tarjeta">
+            <div class="usuarios__rol-icono">
+              <i data-lucide="shield-check"></i>
+            </div>
+
+            <h2>Administrador</h2>
+            <p>
+              Tiene acceso completo a los módulos del sistema
+              y puede gestionar las cuentas de usuario.
+            </p>
+
+            <div class="usuarios__rol-etiqueta">
+              Acceso completo
+            </div>
+          </article>
+
+          <article class="usuarios__rol-tarjeta">
+            <div class="usuarios__rol-icono">
+              <i data-lucide="user-round"></i>
+            </div>
+
+            <h2>Empleado</h2>
+            <p>
+              Accede únicamente a los módulos asignados
+              por el administrador.
+            </p>
+
+            <div class="usuarios__rol-etiqueta">
+              Permisos personalizados
+            </div>
+          </article>
+
+        </div>
+
+        <div class="usuarios__permisos-info">
+          <h2>Permisos disponibles</h2>
+          <p>
+            Los permisos de cada empleado se seleccionan al
+            crear o editar su cuenta.
+          </p>
+
+          <div id="listaModulosUsuarios"
+               class="usuarios__modulos"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="dashboard-overlay" id="dashboardOverlay"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/usuarios-datos.js"></script>
+  <script src="js/usuarios.js"></script>
+</body>
+</html>

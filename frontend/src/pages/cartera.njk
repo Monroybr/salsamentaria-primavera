@@ -1,0 +1,135 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuentas por cobrar | Salsamentaria Primavera</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="dashboard-page cartera-page">
+
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+    {% include "header.njk" %}
+
+    <main class="dashboard cartera">
+
+      <!-- Encabezado -->
+      <div class="cartera__encabezado">
+        <div>
+          <p class="dashboard__ruta">
+            Salsamentaria Primavera / Cuentas por cobrar
+          </p>
+          <h1>Cuentas por cobrar</h1>
+          <p>Controla saldos pendientes, abonos y vencimientos.</p>
+        </div>
+
+        <a href="registrar-abono.html"
+           class="cartera__boton-principal">
+          <i data-lucide="plus"></i>
+          Registrar abono
+        </a>
+      </div>
+
+      <!-- Indicadores -->
+      <section class="cartera__indicadores">
+
+        <article class="cartera__indicador">
+          <span class="cartera__indicador-icono">
+            <i data-lucide="wallet"></i>
+          </span>
+
+          <div>
+            <p>Cartera total</p>
+            <strong id="carteraTotal">$0</strong>
+            <small id="clientesConSaldo">0 clientes con saldo</small>
+          </div>
+        </article>
+
+        <article class="cartera__indicador">
+          <span class="cartera__indicador-icono cartera__indicador-icono--alerta">
+            <i data-lucide="alert-triangle"></i>
+          </span>
+
+          <div>
+            <p>Por vencer</p>
+            <strong id="carteraPorVencer">$0</strong>
+            <small>Próximos 7 días</small>
+          </div>
+        </article>
+
+        <article class="cartera__indicador">
+          <span class="cartera__indicador-icono cartera__indicador-icono--vencida">
+            <i data-lucide="alert-triangle"></i>
+          </span>
+
+          <div>
+            <p>Cartera vencida</p>
+            <strong id="carteraVencida">$0</strong>
+            <small>Requiere atención</small>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- Tabla de saldos -->
+      <section class="cartera__tarjeta">
+
+        <div class="cartera__tabla-encabezado">
+          <div>
+            <h2>Saldos pendientes</h2>
+            <p>Facturas a crédito y abonos registrados</p>
+          </div>
+
+          <select id="filtroFechasCartera"
+                  aria-label="Filtrar por vencimiento">
+            <option value="todas">Todas las fechas</option>
+            <option value="vencidas">Vencidas</option>
+            <option value="proximas">Próximos 7 días</option>
+            <option value="vigentes">Vigentes</option>
+          </select>
+        </div>
+
+        <div class="cartera__tabla-scroll">
+          <table class="cartera__tabla">
+            <thead>
+              <tr>
+                <th>CLIENTE</th>
+                <th>FACTURA</th>
+                <th>FECHA DE VENTA</th>
+                <th>VENCIMIENTO</th>
+                <th>SALDO</th>
+                <th>ESTADO</th>
+                <th>ACCIONES</th>
+              </tr>
+            </thead>
+
+            <tbody id="tablaCartera"></tbody>
+          </table>
+        </div>
+
+        <p id="sinCuentasCartera"
+           class="cartera__sin-resultados"
+           hidden>
+          No hay cuentas pendientes con el filtro seleccionado.
+        </p>
+
+      </section>
+
+    </main>
+  </div>
+
+  <div class="dashboard-overlay"
+       id="dashboardOverlay"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/cartera-datos.js"></script>
+  <script src="js/cartera.js"></script>
+
+</body>
+</html>

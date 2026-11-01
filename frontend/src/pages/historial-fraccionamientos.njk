@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Historial de fraccionamientos | Salsamentaria Primavera</title>
+
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="dashboard-page historial-page">
+
+  <!-- Menú lateral del sistema -->
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+
+    <!-- Encabezado superior -->
+    {% include "header.njk" %}
+
+    <main class="dashboard historial-fraccionamientos">
+
+      <!-- Encabezado de la página -->
+      <div class="historial-fraccionamientos__encabezado">
+
+        <div class="historial-fraccionamientos__titulo">
+
+          <a href="fraccionamiento.html"
+             class="historial-fraccionamientos__volver"
+             aria-label="Volver a fraccionamiento">
+            <i data-lucide="chevron-left"></i>
+          </a>
+
+          <div>
+            <p class="dashboard__ruta">
+              Fraccionamiento / Historial
+            </p>
+
+            <h1>Historial de fraccionamientos</h1>
+
+            <p class="historial-fraccionamientos__descripcion">
+              Consulta las operaciones realizadas y las cantidades generadas.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Exportar los registros visibles -->
+        <button type="button"
+                id="exportarFraccionamientos"
+                class="historial-fraccionamientos__exportar">
+
+          <i data-lucide="download"></i>
+          <span>Exportar</span>
+
+        </button>
+
+      </div>
+
+      <!-- Resumen de operaciones -->
+      <section class="historial-fraccionamientos__indicadores"
+               aria-label="Resumen de fraccionamientos">
+
+        <article>
+          <span>Operaciones este mes</span>
+          <strong id="totalOperaciones">0 registros</strong>
+        </article>
+
+        <article>
+          <span>Producto utilizado</span>
+          <strong id="totalUtilizado">0 kg</strong>
+        </article>
+
+        <article>
+          <span>Bolsas generadas</span>
+          <strong id="totalBolsas">0 unidades</strong>
+        </article>
+
+        <article>
+          <span>Merma registrada</span>
+          <strong id="totalMerma"
+                  class="historial-fraccionamientos__valor-merma">
+            0 kg
+          </strong>
+        </article>
+
+      </section>
+
+      <!-- Buscador y filtros -->
+      <section class="historial-fraccionamientos__filtros"
+               aria-label="Filtros del historial">
+
+        <label class="historial-fraccionamientos__buscar">
+
+          <i data-lucide="search"></i>
+
+          <input type="search"
+                 id="buscarFraccionamiento"
+                 placeholder="Buscar por producto u operación..."
+                 aria-label="Buscar fraccionamientos">
+
+        </label>
+
+        <select id="filtroProducto"
+                aria-label="Filtrar por producto">
+          <option value="todos">Todos los productos</option>
+        </select>
+
+        <select id="filtroPeriodo"
+                aria-label="Filtrar por período">
+
+          <option value="todos">Todos los períodos</option>
+          <option value="mes">Este mes</option>
+          <option value="anterior">Mes anterior</option>
+
+        </select>
+
+        <select id="filtroResponsable"
+                aria-label="Filtrar por responsable">
+          <option value="todos">Todos los responsables</option>
+        </select>
+
+      </section>
+
+      <!-- Tabla de operaciones -->
+      <section class="historial-fraccionamientos__tarjeta">
+
+        <div class="historial-fraccionamientos__tarjeta-titulo">
+
+          <div>
+            <h2>Operaciones registradas</h2>
+            <p>
+              Movimientos del inventario a granel hacia
+              presentaciones empacadas
+            </p>
+          </div>
+
+          <span id="contadorFraccionamientos"
+                class="historial-fraccionamientos__contador">
+            0 resultados
+          </span>
+
+        </div>
+
+        <div class="historial-fraccionamientos__tabla-scroll">
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>OPERACIÓN</th>
+                <th>PRODUCTO A GRANEL</th>
+                <th>CANTIDAD USADA</th>
+                <th>PRESENTACIÓN GENERADA</th>
+                <th>BOLSAS</th>
+                <th>PESO EMPACADO</th>
+                <th>MERMA</th>
+                <th>FECHA</th>
+                <th>RESPONSABLE</th>
+              </tr>
+            </thead>
+
+            <!-- JavaScript agrega los registros aquí -->
+            <tbody id="tablaFraccionamientos"></tbody>
+
+          </table>
+
+        </div>
+
+        <!-- Mensaje cuando no hay resultados -->
+        <p id="sinFraccionamientos"
+           class="historial-fraccionamientos__sin-resultados"
+           hidden>
+          No se encontraron operaciones con los filtros seleccionados.
+        </p>
+
+        <!-- Paginación -->
+        <div class="historial-fraccionamientos__pie">
+
+          <span id="textoPaginacion">
+            Mostrando 0 registros
+          </span>
+
+          <nav id="paginacionFraccionamientos"
+               class="historial-fraccionamientos__paginacion"
+               aria-label="Páginas del historial">
+          </nav>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Fondo del menú en dispositivos móviles -->
+  <div class="dashboard-overlay"
+       id="dashboardOverlay"></div>
+
+  <!-- Biblioteca de iconos -->
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+  <!-- JavaScript del menú y del historial -->
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/historial-fraccionamientos.js"></script>
+
+</body>
+</html>

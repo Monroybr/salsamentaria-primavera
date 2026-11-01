@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Sistema de gestión de Salsamentaria Primavera"
+  >
+
+  <title>{% block titulo %}Salsamentaria Primavera{% endblock %}</title>
+
+  <!-- ======================================
+       AUTENTICACIÓN COMPARTIDA
+  ======================================= -->
+
+  <script src="js/auth.js"></script>
+
+  <script>
+    // Verificar la sesión del administrador.
+    window.PrimaveraAuth.protegerPagina();
+  </script>
+
+  <!-- ======================================
+       ESTILOS GENERALES
+  ======================================= -->
+
+  <link rel="stylesheet" href="css/main.css">
+
+  <!-- Estilos adicionales de cada módulo -->
+  {% block estilos %}{% endblock %}
+
+</head>
+
+<body class="dashboard-page {% block clase_body %}{% endblock %}">
+
+  <!-- ======================================
+       MENÚ LATERAL
+  ======================================= -->
+
+  {% include "sidebar.njk" %}
+
+  <!-- ======================================
+       ESTRUCTURA PRINCIPAL
+  ======================================= -->
+
+  <div class="dashboard-layout">
+
+    <!-- Barra superior -->
+    {% include "header.njk" %}
+
+    <!-- Contenido específico de cada página -->
+    {% block contenido %}{% endblock %}
+
+  </div>
+
+  <!-- ======================================
+       FONDO DEL MENÚ MÓVIL
+  ======================================= -->
+
+  <div
+    class="dashboard-overlay"
+    id="dashboardOverlay"
+    aria-hidden="true"
+  ></div>
+
+  <!-- ======================================
+       LIBRERÍA DE ICONOS
+  ======================================= -->
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+  <!-- ======================================
+       SCRIPTS COMPARTIDOS
+  ======================================= -->
+
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+
+  <!-- Scripts específicos de cada módulo -->
+  {% block scripts %}{% endblock %}
+
+</body>
+</html>

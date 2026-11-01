@@ -1,0 +1,244 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Nueva venta | Salsamentaria Primavera</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="dashboard-page ventas-page">
+
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+    {% include "header.njk" %}
+
+    <main class="dashboard ventas">
+
+      <!-- Encabezado -->
+      <div class="ventas__encabezado">
+        <div class="ventas__titulo-con-volver">
+          <a href="ventas.html"
+             class="ventas__volver"
+             aria-label="Regresar a ventas">
+            <i data-lucide="chevron-left"></i>
+          </a>
+
+          <div>
+            <p class="dashboard__ruta">Ventas / Nueva venta</p>
+            <h1>Nueva venta</h1>
+            <p>Agrega los productos y completa la información del pago.</p>
+          </div>
+        </div>
+
+        <div class="ventas__numero">
+          <span>Venta</span>
+          <strong id="numeroNuevaVenta">V-1049</strong>
+        </div>
+      </div>
+
+      <!-- Formulario completo -->
+      <form id="formNuevaVenta" class="nueva-venta__layout">
+
+        <!-- Columna izquierda -->
+        <div class="nueva-venta__principal">
+
+          <section class="nueva-venta__tarjeta">
+
+            <div class="nueva-venta__seccion-titulo">
+              <div>
+                <h2>Productos de la venta</h2>
+                <p>Selecciona la presentación e indica la cantidad.</p>
+              </div>
+
+              <span id="contadorProductosVenta"
+                    class="nueva-venta__contador">
+                0 productos
+              </span>
+            </div>
+
+            <!-- Buscador de productos -->
+            <label class="ventas__busqueda nueva-venta__buscador">
+              <i data-lucide="search"></i>
+              <input id="buscarProductoVenta"
+                     type="search"
+                     placeholder="Buscar producto por nombre o código..."
+                     autocomplete="off">
+            </label>
+
+            <!-- Productos sugeridos -->
+            <div id="productosDisponibles"
+                 class="nueva-venta__sugerencias"></div>
+
+            <!-- Tabla de productos seleccionados -->
+            <div class="ventas__tabla-scroll">
+              <table class="nueva-venta__tabla">
+                <thead>
+                  <tr>
+                    <th>PRODUCTO</th>
+                    <th>PRESENTACIÓN</th>
+                    <th>CANTIDAD</th>
+                    <th>PRECIO UNITARIO</th>
+                    <th>TOTAL</th>
+                    <th></th>
+                  </tr>
+                </thead>
+
+                <tbody id="detalleProductosVenta"></tbody>
+              </table>
+            </div>
+
+            <div class="nueva-venta__agregar">
+              <button type="button" id="agregarOtroProducto">
+                <i data-lucide="plus"></i>
+                Agregar otro producto
+              </button>
+            </div>
+          </section>
+
+          <!-- Observaciones -->
+          <section class="nueva-venta__tarjeta nueva-venta__notas">
+            <h2>Notas de la venta</h2>
+            <p>Información adicional para esta transacción.</p>
+
+            <textarea id="notasVenta"
+                      rows="3"
+                      placeholder="Agregar una observación opcional..."></textarea>
+          </section>
+
+        </div>
+
+        <!-- Columna derecha -->
+        <aside class="nueva-venta__lateral">
+
+          <!-- Forma de pago -->
+          <section class="nueva-venta__tarjeta">
+            <h2>Forma de pago</h2>
+            <p>Selecciona cómo pagará el cliente.</p>
+
+            <div class="nueva-venta__tipos-pago">
+
+              <label class="nueva-venta__tipo activo">
+                <input type="radio"
+                       name="tipoVenta"
+                       value="contado"
+                       checked>
+                <i data-lucide="wallet"></i>
+                <span>
+                  <strong>Contado</strong>
+                  <small>Pago completo ahora</small>
+                </span>
+              </label>
+
+              <label class="nueva-venta__tipo">
+                <input type="radio"
+                       name="tipoVenta"
+                       value="credito">
+                <i data-lucide="users"></i>
+                <span>
+                  <strong>Crédito</strong>
+                  <small>Genera cuenta por cobrar</small>
+                </span>
+              </label>
+            </div>
+
+            <!-- Cliente requerido para crédito -->
+            <div id="campoCliente"
+                 class="nueva-venta__campo"
+                 hidden>
+              <label for="clienteVenta">Cliente</label>
+              <select id="clienteVenta">
+                <option value="">Seleccionar cliente...</option>
+                <option value="María Rodríguez">María Rodríguez</option>
+                <option value="Tienda El Portal">Tienda El Portal</option>
+                <option value="Carlos Méndez">Carlos Méndez</option>
+                <option value="Panadería Central">Panadería Central</option>
+              </select>
+            </div>
+
+            <div id="campoMedioPago"
+                 class="nueva-venta__campo">
+              <label for="medioPagoVenta">Medio de pago</label>
+              <select id="medioPagoVenta">
+                <option value="efectivo">Efectivo</option>
+                <option value="transferencia">Transferencia</option>
+              </select>
+            </div>
+
+            <div id="campoValorRecibido"
+                 class="nueva-venta__campo">
+              <label for="valorRecibido">Valor recibido</label>
+              <input id="valorRecibido"
+                     type="number"
+                     min="0"
+                     step="1"
+                     placeholder="0">
+            </div>
+
+            <div id="campoCambio"
+                 class="nueva-venta__cambio">
+              <span>Cambio</span>
+              <strong id="cambioVenta">$0</strong>
+            </div>
+          </section>
+
+          <!-- Resumen -->
+          <section class="nueva-venta__tarjeta">
+            <h2>Resumen de la venta</h2>
+
+            <div class="nueva-venta__resumen-fila">
+              <span>Subtotal</span>
+              <strong id="subtotalVenta">$0</strong>
+            </div>
+
+            <div class="nueva-venta__resumen-fila">
+              <span>Descuento</span>
+              <strong>$0</strong>
+            </div>
+
+            <div class="nueva-venta__resumen-fila">
+              <span>Impuestos incluidos</span>
+              <strong>$0</strong>
+            </div>
+
+            <div class="nueva-venta__total">
+              <span>Total a pagar</span>
+              <strong id="totalVenta">$0</strong>
+            </div>
+
+            <p id="mensajeVenta"
+               class="nueva-venta__mensaje"
+               role="status"
+               hidden></p>
+
+            <button type="submit"
+                    id="registrarVenta"
+                    class="ventas__boton-principal nueva-venta__guardar">
+              <i data-lucide="check-circle"></i>
+              Registrar venta
+            </button>
+
+            <a href="ventas.html"
+               class="nueva-venta__cancelar">
+              Cancelar venta
+            </a>
+          </section>
+
+        </aside>
+      </form>
+    </main>
+  </div>
+
+  <div class="dashboard-overlay"
+       id="dashboardOverlay"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/nueva-venta.js"></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clientes | Salsamentaria Primavera</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="dashboard-page clientes-page">
+
+  <!-- Menú lateral -->
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+    {% include "header.njk" %}
+
+    <main class="dashboard clientes">
+
+      <!-- Encabezado -->
+      <div class="clientes__encabezado">
+        <div>
+          <p class="dashboard__ruta">
+            Salsamentaria Primavera / Clientes
+          </p>
+          <h1>Clientes</h1>
+          <p>Gestiona tus clientes y consulta su estado de cuenta.</p>
+        </div>
+
+        <a href="nuevo-cliente.html"
+           class="clientes__boton-principal">
+          <i data-lucide="plus"></i>
+          Nuevo cliente
+        </a>
+      </div>
+
+      <!-- Buscador y filtro -->
+      <div class="clientes__filtros">
+
+        <label class="clientes__busqueda">
+          <i data-lucide="search"></i>
+          <input type="search"
+                 id="buscarCliente"
+                 placeholder="Buscar por nombre, teléfono o contacto..."
+                 autocomplete="off">
+        </label>
+
+        <select id="filtroEstadoCliente"
+                aria-label="Filtrar clientes por estado">
+          <option value="todos">Todos los estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="aldia">Al día</option>
+        </select>
+
+      </div>
+
+      <!-- Tabla -->
+      <section class="clientes__tarjeta">
+
+        <div class="clientes__tabla-scroll">
+          <table class="clientes__tabla">
+            <thead>
+              <tr>
+                <th>CLIENTE</th>
+                <th>PERSONA DE CONTACTO</th>
+                <th>TELÉFONO</th>
+                <th>SALDO PENDIENTE</th>
+                <th>ESTADO</th>
+                <th>ACCIONES</th>
+              </tr>
+            </thead>
+
+            <tbody id="tablaClientes"></tbody>
+          </table>
+        </div>
+
+        <p id="sinClientes"
+           class="clientes__sin-resultados"
+           hidden>
+          No se encontraron clientes con los filtros seleccionados.
+        </p>
+
+        <!-- Paginación -->
+        <div class="clientes__pie">
+          <span id="textoPaginacionClientes"></span>
+
+          <nav id="paginacionClientes"
+               class="clientes__paginacion"
+               aria-label="Paginación de clientes"></nav>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Ventana para consultar información -->
+  <dialog id="detalleCliente" class="clientes__dialogo">
+    <div class="clientes__dialogo-encabezado">
+      <h2>Información del cliente</h2>
+      <button id="cerrarDetalleCliente"
+              type="button"
+              aria-label="Cerrar">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+
+    <div id="contenidoDetalleCliente"></div>
+  </dialog>
+
+  <div class="dashboard-overlay"
+       id="dashboardOverlay"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/clientes.js"></script>
+
+</body>
+</html>

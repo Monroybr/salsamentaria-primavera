@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo usuario | Salsamentaria Primavera</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="dashboard-page nuevo-usuario-page">
+
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+    {% include "header.njk" %}
+
+    <main class="dashboard nuevo-usuario">
+
+      <!-- Encabezado -->
+      <div class="nuevo-usuario__encabezado">
+        <a href="usuarios.html"
+           class="nuevo-usuario__volver"
+           aria-label="Volver a usuarios">
+          <i data-lucide="chevron-left"></i>
+        </a>
+
+        <div>
+          <p class="dashboard__ruta">Usuarios / Nuevo usuario</p>
+          <h1 id="tituloFormularioUsuario">Nuevo usuario</h1>
+          <p>Crea una cuenta y define sus permisos de acceso.</p>
+        </div>
+      </div>
+
+      <form id="formNuevoUsuario" class="nuevo-usuario__layout">
+
+        <div class="nuevo-usuario__principal">
+
+          <!-- Sección 1 -->
+          <section class="nuevo-usuario__tarjeta">
+            <div class="nuevo-usuario__seccion">
+              <span class="nuevo-usuario__numero">1</span>
+              <div>
+                <h2>Información personal</h2>
+                <p>Datos de la persona que utilizará el sistema.</p>
+              </div>
+            </div>
+
+            <div class="nuevo-usuario__fila">
+              <div class="nuevo-usuario__campo">
+                <label for="nombreUsuario">Nombres</label>
+                <input
+                  id="nombreUsuario"
+                  type="text"
+                  placeholder="Ej. Daniela"
+                  maxlength="60"
+                  required>
+              </div>
+
+              <div class="nuevo-usuario__campo">
+                <label for="apellidoUsuario">Apellidos</label>
+                <input
+                  id="apellidoUsuario"
+                  type="text"
+                  placeholder="Ej. Gómez López"
+                  maxlength="60"
+                  required>
+              </div>
+
+              <div class="nuevo-usuario__campo">
+                <label for="correoUsuario">Correo electrónico</label>
+                <input
+                  id="correoUsuario"
+                  type="email"
+                  placeholder="usuario@primavera.co"
+                  maxlength="120"
+                  required>
+              </div>
+
+              <div class="nuevo-usuario__campo">
+                <label for="telefonoUsuario">Teléfono (opcional)</label>
+                <input
+                  id="telefonoUsuario"
+                  type="tel"
+                  placeholder="300 000 0000"
+                  maxlength="20">
+              </div>
+            </div>
+          </section>
+
+          <!-- Sección 2 -->
+          <section class="nuevo-usuario__tarjeta">
+            <div class="nuevo-usuario__seccion">
+              <span class="nuevo-usuario__numero">2</span>
+              <div>
+                <h2>Rol y acceso</h2>
+                <p>Selecciona el nivel de acceso principal del usuario.</p>
+              </div>
+            </div>
+
+            <div class="nuevo-usuario__roles">
+
+              <label class="nuevo-usuario__rol nuevo-usuario__rol--activo">
+                <input type="radio" name="rolUsuario"
+                       value="Empleado" checked>
+
+                <i data-lucide="user-round"></i>
+
+                <span>
+                  <strong>Empleado</strong>
+                  <small>Acceso según los permisos asignados</small>
+                </span>
+              </label>
+
+              <label class="nuevo-usuario__rol">
+                <input type="radio" name="rolUsuario"
+                       value="Administrador">
+
+                <i data-lucide="shield-check"></i>
+
+                <span>
+                  <strong>Administrador</strong>
+                  <small>Acceso completo al sistema</small>
+                </span>
+              </label>
+
+            </div>
+
+            <div class="nuevo-usuario__permisos-titulo">
+              <div>
+                <h3>Permisos por módulo</h3>
+                <p>Selecciona los módulos disponibles para este empleado.</p>
+              </div>
+
+              <button type="button" id="seleccionarTodosPermisos">
+                Seleccionar todos
+              </button>
+            </div>
+
+            <div id="listaPermisosUsuario"
+                 class="nuevo-usuario__permisos"></div>
+
+          </section>
+
+          <!-- Sección 3 -->
+          <section class="nuevo-usuario__tarjeta">
+            <div class="nuevo-usuario__seccion">
+              <span class="nuevo-usuario__numero">3</span>
+              <div>
+                <h2>Contraseña temporal</h2>
+                <p>El usuario podrá cambiarla después de iniciar sesión.</p>
+              </div>
+            </div>
+
+            <div class="nuevo-usuario__fila">
+              <div class="nuevo-usuario__campo">
+                <label for="passwordUsuario">Contraseña</label>
+                <input
+                  id="passwordUsuario"
+                  type="password"
+                  minlength="10"
+                  maxlength="128"
+                  autocomplete="new-password"
+                  required>
+              </div>
+
+              <div class="nuevo-usuario__campo">
+                <label for="confirmarPasswordUsuario">
+                  Confirmar contraseña
+                </label>
+                <input
+                  id="confirmarPasswordUsuario"
+                  type="password"
+                  minlength="10"
+                  maxlength="128"
+                  autocomplete="new-password"
+                  required>
+              </div>
+            </div>
+
+            <label class="nuevo-usuario__enviar-correo">
+              <input type="checkbox" id="enviarAccesoCorreo" checked>
+              <span>
+                <strong>Enviar datos de acceso por correo</strong>
+                <small>
+                  El usuario recibirá instrucciones para acceder
+                  cuando se habilite el servicio de correo.
+                </small>
+              </span>
+            </label>
+          </section>
+
+        </div>
+
+        <!-- Panel derecho -->
+        <aside class="nuevo-usuario__lateral">
+
+          <section class="nuevo-usuario__tarjeta nuevo-usuario__resumen">
+
+            <div class="nuevo-usuario__avatar" id="avatarNuevoUsuario">
+              NU
+            </div>
+
+            <h2 id="nombreResumenUsuario">Nuevo usuario</h2>
+            <p>Cuenta pendiente de creación</p>
+
+            <div class="nuevo-usuario__resumen-fila">
+              <span>Rol</span>
+              <strong id="rolResumenUsuario">Empleado</strong>
+            </div>
+
+            <div class="nuevo-usuario__resumen-fila">
+              <span>Permisos</span>
+              <strong id="permisosResumenUsuario">5 módulos</strong>
+            </div>
+
+            <div class="nuevo-usuario__resumen-fila">
+              <span>Estado</span>
+              <strong class="nuevo-usuario__estado">Activo</strong>
+            </div>
+
+          </section>
+
+          <section class="nuevo-usuario__tarjeta nuevo-usuario__acciones">
+
+            <button type="submit"
+                    class="nuevo-usuario__guardar"
+                    id="guardarUsuario">
+              <i data-lucide="circle-check"></i>
+              <span id="textoGuardarUsuario">Crear usuario</span>
+            </button>
+
+            <a href="usuarios.html">Cancelar</a>
+
+            <small>
+              El acceso quedará habilitado cuando se configure
+              la autenticación del servidor.
+            </small>
+
+          </section>
+
+          <p id="mensajeNuevoUsuario"
+             class="nuevo-usuario__mensaje"
+             role="alert"
+             hidden></p>
+
+        </aside>
+
+      </form>
+    </main>
+  </div>
+
+  <div class="dashboard-overlay" id="dashboardOverlay"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/usuarios-datos.js"></script>
+  <script src="js/nuevo-usuario.js"></script>
+</body>
+</html>

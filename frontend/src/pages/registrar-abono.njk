@@ -1,0 +1,255 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrar abono | Salsamentaria Primavera</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="dashboard-page cartera-page">
+
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+    {% include "header.njk" %}
+
+    <main class="dashboard registrar-abono">
+
+      <!-- Encabezado -->
+      <div class="registrar-abono__encabezado">
+
+        <a href="cartera.html"
+           class="registrar-abono__volver"
+           aria-label="Volver a cartera">
+          <i data-lucide="chevron-left"></i>
+        </a>
+
+        <div>
+          <p class="dashboard__ruta">
+            Cuentas por cobrar / Registrar abono
+          </p>
+          <h1>Registrar abono</h1>
+          <p>Registra un pago y actualiza el saldo pendiente del cliente.</p>
+        </div>
+
+        <div class="registrar-abono__comprobante">
+          <span>Comprobante</span>
+          <strong id="numeroComprobante">AB-0186</strong>
+        </div>
+
+      </div>
+
+      <form id="formRegistrarAbono"
+            class="registrar-abono__layout">
+
+        <div class="registrar-abono__principal">
+
+          <!-- Sección 1 -->
+          <section class="registrar-abono__tarjeta">
+
+            <div class="registrar-abono__seccion">
+              <span class="registrar-abono__numero">1</span>
+              <div>
+                <h2>Cuenta por cobrar</h2>
+                <p>Selecciona el cliente y la venta que recibirá el abono.</p>
+              </div>
+            </div>
+
+            <div class="registrar-abono__campo">
+              <label for="clienteAbono">Cliente</label>
+              <select id="clienteAbono" required></select>
+            </div>
+
+            <div class="registrar-abono__fila">
+
+              <div class="registrar-abono__campo">
+                <label for="facturaAbono">Venta o factura</label>
+                <select id="facturaAbono" required></select>
+              </div>
+
+              <div class="registrar-abono__saldo-actual">
+                <div>
+                  <span>Saldo pendiente</span>
+                  <small>Antes de este abono</small>
+                </div>
+
+                <strong id="saldoActualAbono">$0</strong>
+              </div>
+
+            </div>
+
+          </section>
+
+          <!-- Sección 2 -->
+          <section class="registrar-abono__tarjeta">
+
+            <div class="registrar-abono__seccion">
+              <span class="registrar-abono__numero">2</span>
+              <div>
+                <h2>Información del pago</h2>
+                <p>Ingresa el valor recibido y su medio de pago.</p>
+              </div>
+            </div>
+
+            <div class="registrar-abono__fila">
+
+              <div class="registrar-abono__campo">
+                <label for="valorAbono">Valor del abono</label>
+
+                <div class="registrar-abono__input-dinero">
+                  <span>$</span>
+                  <input id="valorAbono"
+                         type="number"
+                         min="1"
+                         step="1"
+                         placeholder="100000"
+                         required>
+                </div>
+              </div>
+
+              <div class="registrar-abono__campo">
+                <label for="medioPagoAbono">Medio de pago</label>
+                <select id="medioPagoAbono" required>
+                  <option value="efectivo">Efectivo</option>
+                  <option value="transferencia">Transferencia</option>
+                  <option value="consignacion">Consignación</option>
+                </select>
+              </div>
+
+            </div>
+
+            <div class="registrar-abono__fila">
+
+              <div class="registrar-abono__campo">
+                <label for="fechaAbono">Fecha del pago</label>
+                <input id="fechaAbono"
+                       type="date"
+                       required>
+              </div>
+
+              <div class="registrar-abono__campo">
+                <label for="referenciaAbono">
+                  Número de referencia (opcional)
+                </label>
+                <input id="referenciaAbono"
+                       type="text"
+                       maxlength="80"
+                       placeholder="Ej. TRX-458920">
+              </div>
+
+            </div>
+
+            <div class="registrar-abono__campo">
+              <label for="observacionesAbono">
+                Observaciones (opcional)
+              </label>
+
+              <textarea id="observacionesAbono"
+                        rows="3"
+                        maxlength="500"
+                        placeholder="Agrega información adicional sobre el pago..."></textarea>
+            </div>
+
+            <!-- Valores rápidos -->
+            <div class="registrar-abono__rapidos">
+              <span>Abono rápido:</span>
+
+              <button type="button" data-valor="50000">
+                $50.000
+              </button>
+
+              <button type="button" data-valor="100000">
+                $100.000
+              </button>
+
+              <button type="button" data-valor="total">
+                Pagar todo
+              </button>
+            </div>
+
+          </section>
+
+        </div>
+
+        <!-- Columna derecha -->
+        <aside class="registrar-abono__lateral">
+
+          <section class="registrar-abono__tarjeta">
+
+            <div class="registrar-abono__resumen-icono">
+              <i data-lucide="wallet"></i>
+            </div>
+
+            <h2>Resumen del abono</h2>
+            <p class="registrar-abono__descripcion">
+              Verifica el nuevo saldo antes de registrar.
+            </p>
+
+            <div class="registrar-abono__cliente-resumen">
+              <small>CLIENTE</small>
+              <strong id="resumenClienteAbono">—</strong>
+              <span id="resumenFacturaAbono">—</span>
+            </div>
+
+            <div class="registrar-abono__resumen-fila">
+              <span>Saldo anterior</span>
+              <strong id="resumenSaldoAnterior">$0</strong>
+            </div>
+
+            <div class="registrar-abono__resumen-fila">
+              <span>Valor del abono</span>
+              <strong id="resumenValorAbono">-$0</strong>
+            </div>
+
+            <div class="registrar-abono__nuevo-saldo">
+              <div>
+                <span>Nuevo saldo pendiente</span>
+                <small>Saldo posterior al pago</small>
+              </div>
+
+              <strong id="resumenNuevoSaldo">$0</strong>
+            </div>
+
+          </section>
+
+          <section class="registrar-abono__tarjeta registrar-abono__acciones">
+
+            <button type="submit"
+                    id="guardarAbono"
+                    class="cartera__boton-principal">
+              <i data-lucide="check-circle"></i>
+              Registrar abono
+            </button>
+
+            <a href="cartera.html">Cancelar</a>
+
+            <p id="mensajeAbono"
+               role="status"
+               hidden></p>
+
+            <small>
+              El pago quedará registrado en el historial del cliente.
+            </small>
+
+          </section>
+
+        </aside>
+
+      </form>
+
+    </main>
+  </div>
+
+  <div class="dashboard-overlay"
+       id="dashboardOverlay"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/cartera-datos.js"></script>
+  <script src="js/registrar-abono.js"></script>
+
+</body>
+</html>

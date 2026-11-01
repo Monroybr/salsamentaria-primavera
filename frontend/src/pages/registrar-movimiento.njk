@@ -1,0 +1,285 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Registrar movimiento | Salsamentaria Primavera</title>
+
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="dashboard-page movimiento-page">
+
+  <!-- Menú lateral -->
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+
+    <!-- Encabezado del sistema -->
+    {% include "header.njk" %}
+
+    <main class="dashboard movimiento">
+
+      <!-- Encabezado de la página -->
+      <div class="movimiento__encabezado">
+
+        <div class="movimiento__titulo">
+          <a href="inventario.html"
+             class="movimiento__volver"
+             aria-label="Volver al inventario">
+            <i data-lucide="chevron-left"></i>
+          </a>
+
+          <div>
+            <p class="dashboard__ruta">
+              Inventario / Registrar movimiento
+            </p>
+
+            <h1>Registrar movimiento</h1>
+
+            <p>Actualiza las existencias mediante una entrada, salida o ajuste.</p>
+          </div>
+        </div>
+
+        <div class="movimiento__codigo">
+          <span>Movimiento</span>
+          <strong>M-0873</strong>
+        </div>
+
+      </div>
+
+      <!-- Formulario y resumen -->
+      <div class="movimiento__distribucion">
+
+        <form id="formMovimiento" class="movimiento__formulario">
+
+          <!-- Sección 1: tipo de movimiento -->
+          <section class="movimiento__tarjeta">
+
+            <div class="movimiento__seccion-titulo">
+              <span class="movimiento__numero">1</span>
+
+              <div>
+                <h2>Tipo de movimiento</h2>
+                <p>Selecciona cómo se modificará el inventario.</p>
+              </div>
+            </div>
+
+            <div class="movimiento__tipos">
+
+              <label class="movimiento__tipo activo">
+                <input type="radio"
+                       name="tipoMovimiento"
+                       value="entrada"
+                       checked>
+
+                <i data-lucide="arrow-down-to-line"></i>
+
+                <span>
+                  <strong>Entrada</strong>
+                  <small>Compra o devolución</small>
+                </span>
+              </label>
+
+              <label class="movimiento__tipo">
+                <input type="radio"
+                       name="tipoMovimiento"
+                       value="salida">
+
+                <i data-lucide="arrow-up-from-line"></i>
+
+                <span>
+                  <strong>Salida</strong>
+                  <small>Merma, consumo o daño</small>
+                </span>
+              </label>
+
+              <label class="movimiento__tipo">
+                <input type="radio"
+                       name="tipoMovimiento"
+                       value="ajuste">
+
+                <i data-lucide="archive"></i>
+
+                <span>
+                  <strong>Ajuste</strong>
+                  <small>Conteo físico</small>
+                </span>
+              </label>
+
+            </div>
+
+          </section>
+
+          <!-- Sección 2: producto y cantidad -->
+          <section class="movimiento__tarjeta">
+
+            <div class="movimiento__seccion-titulo">
+              <span class="movimiento__numero">2</span>
+
+              <div>
+                <h2>Producto y cantidad</h2>
+                <p>Indica qué producto será afectado.</p>
+              </div>
+            </div>
+
+            <div class="movimiento__campos">
+
+              <div class="movimiento__campo movimiento__campo--completo">
+                <label for="productoMovimiento">Producto</label>
+
+                <select id="productoMovimiento" required>
+                  <option value="harina">Harina de trigo</option>
+                  <option value="mantequilla">Mantequilla</option>
+                  <option value="maiz">Maíz trillado</option>
+                  <option value="queso">Queso campesino</option>
+                  <option value="chorizo">Chorizo santarrosano - 1 kg</option>
+                </select>
+              </div>
+
+              <div class="movimiento__campo">
+                <label for="cantidadMovimiento" id="etiquetaCantidad">
+                  Cantidad
+                </label>
+
+                <div class="movimiento__cantidad">
+                  <input type="number"
+                         id="cantidadMovimiento"
+                         min="0.01"
+                         step="0.01"
+                         value="10"
+                         required>
+
+                  <span id="unidadMovimiento">kg</span>
+                </div>
+              </div>
+
+              <div class="movimiento__campo">
+                <label for="motivoMovimiento">Motivo</label>
+
+                <select id="motivoMovimiento" required>
+                  <option value="">Seleccionar motivo...</option>
+                </select>
+              </div>
+
+              <div class="movimiento__campo">
+                <label for="documentoMovimiento">
+                  Documento de referencia (opcional)
+                </label>
+
+                <input type="text"
+                       id="documentoMovimiento"
+                       placeholder="Ej. Factura 45820">
+              </div>
+
+              <div class="movimiento__campo">
+                <label for="proveedorMovimiento">
+                  Proveedor (opcional)
+                </label>
+
+                <input type="text"
+                       id="proveedorMovimiento"
+                       placeholder="Nombre del proveedor">
+              </div>
+
+              <div class="movimiento__campo movimiento__campo--completo">
+                <label for="observacionesMovimiento">
+                  Observaciones (opcional)
+                </label>
+
+                <textarea id="observacionesMovimiento"
+                          rows="3"
+                          placeholder="Agrega detalles sobre este movimiento..."></textarea>
+              </div>
+
+            </div>
+
+          </section>
+
+        </form>
+
+        <!-- Resumen lateral -->
+        <aside class="movimiento__lateral">
+
+          <section class="movimiento__tarjeta movimiento__resumen">
+
+            <div class="movimiento__resumen-icono">
+              <i data-lucide="arrow-down-to-line"
+                 id="iconoResumen"></i>
+            </div>
+
+            <h2>Resumen del movimiento</h2>
+
+            <p>Revisa el efecto en las existencias.</p>
+
+            <div class="movimiento__producto-resumen">
+              <span>PRODUCTO</span>
+              <strong id="resumenProducto">Harina de trigo</strong>
+            </div>
+
+            <div class="movimiento__resumen-fila">
+              <span>Existencia actual</span>
+              <strong id="resumenActual">42 kg</strong>
+            </div>
+
+            <div class="movimiento__resumen-fila">
+              <span id="resumenTipo">Entrada</span>
+              <strong id="resumenCantidad">+10 kg</strong>
+            </div>
+
+            <div class="movimiento__resultado">
+              <span>Existencia resultante</span>
+              <strong id="resumenResultado">52 kg</strong>
+            </div>
+
+            <p class="movimiento__error" id="errorMovimiento"
+               role="alert" hidden></p>
+
+          </section>
+
+          <!-- Acciones -->
+          <section class="movimiento__tarjeta movimiento__acciones">
+
+            <button type="submit"
+                    form="formMovimiento"
+                    id="guardarMovimiento"
+                    class="movimiento__guardar">
+
+              <i data-lucide="check-circle-2"></i>
+              Registrar movimiento
+
+            </button>
+
+            <a href="inventario.html"
+               class="movimiento__cancelar">
+              Cancelar
+            </a>
+
+            <small>
+              Este registro es una demostración del frontend.
+            </small>
+
+          </section>
+
+        </aside>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Fondo del menú móvil -->
+  <div class="dashboard-overlay" id="dashboardOverlay"></div>
+
+  <!-- Biblioteca de iconos -->
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+  <!-- Scripts -->
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/registrar-movimiento.js"></script>
+
+</body>
+</html>

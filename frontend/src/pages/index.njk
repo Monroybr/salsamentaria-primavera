@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Sistema de gestión de Salsamentaria Primavera"
+  >
+
+  <title>Iniciar sesión | Salsamentaria Primavera</title>
+
+  <!-- Estilos generales -->
+  <link rel="stylesheet" href="css/main.css">
+
+  <!-- Estilos del inicio de sesión -->
+  <link rel="stylesheet" href="css/login.css">
+
+</head>
+
+<body>
+
+  <main class="login">
+
+    <div class="login__contenedor">
+
+      <!-- PANEL IZQUIERDO -->
+      <section class="login__informacion">
+
+        <div class="login__marca">
+
+          <div
+            class="login__logo"
+            aria-hidden="true"
+          >
+            SP
+          </div>
+
+          <h1>
+            Salsamentaria
+            <span>Primavera</span>
+          </h1>
+
+          <h2>Sistema de gestión</h2>
+
+          <div class="login__separador"></div>
+
+          <p>
+            Controla tus productos, ventas,
+            inventario y cuentas por cobrar
+            de forma fácil y segura.
+          </p>
+
+        </div>
+
+      </section>
+
+      <!-- PANEL DERECHO -->
+      <section class="login__formulario">
+
+        <div class="login__contenido">
+
+          <header class="login__encabezado">
+
+            <h2>Iniciar sesión</h2>
+
+            <p>
+              Ingresa tus credenciales
+              para acceder al sistema
+            </p>
+
+          </header>
+
+          <!-- FORMULARIO -->
+          <form id="formLogin" novalidate>
+
+            <!-- CORREO ELECTRÓNICO -->
+            <div class="login__campo">
+
+              <label for="correo">
+                Correo electrónico
+              </label>
+
+              <input
+                type="email"
+                id="correo"
+                name="correo"
+                placeholder="ejemplo@primavera.co"
+                autocomplete="username"
+                required
+              >
+
+            </div>
+
+            <!-- CONTRASEÑA -->
+            <div class="login__campo">
+
+              <label for="contrasena">
+                Contraseña
+              </label>
+
+              <div class="login__password">
+
+                <input
+                  type="password"
+                  id="contrasena"
+                  name="contrasena"
+                  placeholder="Ingresa tu contraseña"
+                  autocomplete="current-password"
+                  required
+                >
+
+                <button
+                  type="button"
+                  id="mostrarPassword"
+                  class="login__mostrar"
+                  aria-label="Mostrar contraseña"
+                  aria-pressed="false"
+                >
+                  Mostrar
+                </button>
+
+              </div>
+
+            </div>
+
+            <!-- MENSAJES DE VALIDACIÓN -->
+            <p
+              id="mensajeLogin"
+              class="login__mensaje"
+              role="alert"
+              aria-live="polite"
+              hidden
+            ></p>
+
+            <!-- BOTÓN INGRESAR -->
+            <button
+              type="submit"
+              class="login__boton"
+            >
+              Ingresar
+            </button>
+
+          </form>
+
+          <!-- PIE DE PÁGINA -->
+          <footer class="login__pie">
+
+            <p>
+              © Salsamentaria Primavera -
+              Liseth Dayana Monroy Briñez
+            </p>
+
+          </footer>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- AUTENTICACIÓN -->
+  <script src="js/auth.js"></script>
+
+  <!-- FORMULARIO DE LOGIN -->
+  <script src="js/login.js"></script>
+
+</body>
+</html>

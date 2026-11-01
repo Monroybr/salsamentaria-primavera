@@ -1,0 +1,455 @@
+
+/* =========================================
+   SALSAMENTARIA PRIMAVERA
+   Estilos del formulario Nuevo producto
+========================================= */
+
+.nuevo-producto {
+
+  /* Encabezado de la página */
+
+  &__encabezado {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+
+    h1 {
+      margin: 5px 0;
+      font-size: clamp(1.5rem, 2vw, 2rem);
+      color: #17221d;
+    }
+
+    p {
+      color: #66766e;
+    }
+  }
+
+  &__volver {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    background: #fff;
+    border: 1px solid #dfe6e1;
+    border-radius: 8px;
+    color: #17221d;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  /* Distribución del formulario */
+
+  &__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 18px;
+    align-items: start;
+  }
+
+  &__secciones,
+  &__lateral {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  /* Tarjetas blancas */
+
+  &__tarjeta {
+    min-width: 0;
+    padding: 22px;
+    background: #fff;
+    border: 1px solid #dfe6e1;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.025);
+  }
+
+  /* Títulos de cada sección */
+
+  &__titulo {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    h2 {
+      margin: 0 0 5px;
+      font-size: 1rem;
+      color: #17221d;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #66766e;
+    }
+  }
+
+  &__numero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #155b3d;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  /* Campos del formulario */
+
+  &__campos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+
+    &--completo {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #17221d;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-width: 0;
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px solid #d5ddd8;
+      border-radius: 7px;
+      background: #fff;
+      color: #17221d;
+      font: inherit;
+      font-size: 0.85rem;
+      box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: #155b3d;
+        box-shadow: 0 0 0 3px rgba(21, 91, 61, 0.12);
+      }
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 75px;
+    }
+  }
+
+  /* Selección del tipo de producto */
+
+  &__tipos {
+    grid-column: 1 / -1;
+    padding: 0;
+    margin: 0;
+    border: 0;
+
+    legend {
+      margin-bottom: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  }
+
+  &__opciones {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  &__opcion {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid #dfe6e1;
+    border-radius: 8px;
+    cursor: pointer;
+
+    input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+      color: #155b3d;
+      flex-shrink: 0;
+    }
+
+    span {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    strong {
+      font-size: 0.85rem;
+    }
+
+    small {
+      color: #66766e;
+      font-size: 0.72rem;
+      line-height: 1.4;
+    }
+
+    &--activa {
+      background: #e8f3ec;
+      border: 2px solid #155b3d;
+      padding: 13px;
+    }
+
+    &:focus-within {
+      outline: 2px solid #155b3d;
+      outline-offset: 2px;
+    }
+  }
+
+  /* Aviso informativo */
+
+  &__aviso {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 7px;
+    background: #e8f3ec;
+    color: #155b3d;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    span {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    strong {
+      font-size: 0.78rem;
+    }
+
+    small {
+      font-size: 0.72rem;
+    }
+  }
+
+  /* Campos de precios */
+
+  &__precio {
+    display: flex;
+    align-items: center;
+    border: 1px solid #d5ddd8;
+    border-radius: 7px;
+    overflow: hidden;
+
+    span {
+      padding-left: 12px;
+      color: #66766e;
+    }
+
+    input {
+      border: 0;
+      box-shadow: none;
+      min-width: 0;
+
+      &:focus {
+        box-shadow: none;
+      }
+    }
+
+    &:focus-within {
+      border-color: #155b3d;
+      box-shadow: 0 0 0 3px rgba(21, 91, 61, 0.12);
+    }
+  }
+
+  /* Vista previa del producto */
+
+  &__vista {
+    text-align: center;
+
+    h2 {
+      margin: 12px 0 6px;
+      font-size: 1rem;
+    }
+
+    > p {
+      color: #66766e;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+  }
+
+  &__vista-icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 62px;
+    height: 62px;
+    margin: 0 auto;
+    border-radius: 12px;
+    background: #f4eee4;
+    color: #b17a2b;
+
+    svg {
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+  &__detalle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 0;
+    border-top: 1px solid #e8ece9;
+    text-align: left;
+
+    span {
+      color: #66766e;
+      font-size: 0.78rem;
+    }
+
+    strong {
+      font-size: 0.78rem;
+    }
+  }
+
+  &__activo {
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #e5f3e9;
+    color: #155b3d;
+  }
+
+  /* Botones */
+
+  &__acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    > p {
+      margin: 0;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #66766e;
+    }
+  }
+
+  &__guardar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    min-height: 44px;
+    border: 0;
+    border-radius: 7px;
+    background: #155b3d;
+    color: #fff;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: #0f4931;
+    }
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+  }
+
+  &__cancelar {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: #66766e;
+    font-size: 0.85rem;
+  }
+
+  &__mensaje {
+    &:empty {
+      display: none;
+    }
+  }
+}
+
+/* TABLETAS */
+
+@media (max-width: 1100px) {
+  .nuevo-producto {
+
+    &__layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    &__lateral {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+  }
+}
+
+/* TELÉFONOS */
+
+@media (max-width: 700px) {
+  .nuevo-producto {
+
+    &__tarjeta {
+      padding: 16px;
+    }
+
+    &__campos,
+    &__opciones,
+    &__lateral {
+      grid-template-columns: 1fr;
+    }
+
+    &__campo--completo,
+    &__tipos,
+    &__aviso {
+      grid-column: auto;
+    }
+
+    &__encabezado {
+      align-items: flex-start;
+    }
+  }
+}

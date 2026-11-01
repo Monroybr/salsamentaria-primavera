@@ -1,0 +1,411 @@
+
+// Estilos del formulario de movimientos.
+.movimiento {
+  min-width: 0;
+
+  &__encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 24px;
+
+    h1 {
+      margin: 7px 0;
+    }
+
+    p {
+      color: #66766e;
+    }
+  }
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  &__volver {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    background: #fff;
+    border: 1px solid #dfe6e1;
+    border-radius: 8px;
+    color: #17221d;
+
+    svg {
+      width: 19px;
+      height: 19px;
+    }
+  }
+
+  &__codigo {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    span {
+      font-size: 0.75rem;
+      color: #66766e;
+    }
+
+    strong {
+      color: #155b3d;
+    }
+  }
+
+  // Distribución del formulario y resumen.
+  &__distribucion {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 265px;
+    gap: 16px;
+    align-items: start;
+  }
+
+  &__formulario,
+  &__lateral {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  &__tarjeta {
+    min-width: 0;
+    padding: 22px;
+    background: #fff;
+    border: 1px solid #dfe6e1;
+    border-radius: 11px;
+  }
+
+  // Encabezados numerados.
+  &__seccion-titulo {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 22px;
+
+    h2 {
+      margin: 0 0 5px;
+      font-size: 1rem;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.78rem;
+      color: #66766e;
+    }
+  }
+
+  &__numero {
+    display: grid;
+    place-items: center;
+    width: 27px;
+    height: 27px;
+    flex-shrink: 0;
+    background: #155b3d;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  // Opciones de entrada, salida y ajuste.
+  &__tipos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  &__tipo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid #dfe6e1;
+    border-radius: 8px;
+    cursor: pointer;
+
+    input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+    }
+
+    svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+      color: #66766e;
+    }
+
+    strong,
+    small {
+      display: block;
+    }
+
+    strong {
+      font-size: 0.83rem;
+    }
+
+    small {
+      margin-top: 4px;
+      font-size: 0.68rem;
+      color: #66766e;
+    }
+
+    &.activo {
+      background: #e9f3ec;
+      border: 2px solid #155b3d;
+      padding: 13px;
+
+      svg,
+      strong {
+        color: #155b3d;
+      }
+    }
+
+    &:focus-within {
+      outline: 2px solid #155b3d;
+      outline-offset: 2px;
+    }
+  }
+
+  // Campos del formulario.
+  &__campos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+
+    &--completo {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #17221d;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-width: 0;
+      min-height: 43px;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid #dfe6e1;
+      border-radius: 7px;
+      color: #17221d;
+      font: inherit;
+      font-size: 0.82rem;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 85px;
+    }
+  }
+
+  &__cantidad {
+    position: relative;
+
+    input {
+      padding-right: 65px;
+    }
+
+    span {
+      position: absolute;
+      right: 13px;
+      top: 13px;
+      font-size: 0.76rem;
+      color: #66766e;
+      pointer-events: none;
+    }
+  }
+
+  // Resumen del movimiento.
+  &__resumen-icono {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 14px;
+    border-radius: 9px;
+    background: #e9f3ec;
+    color: #155b3d;
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  &__resumen {
+    h2 {
+      margin: 0 0 5px;
+      font-size: 0.95rem;
+    }
+
+    > p {
+      margin: 0 0 18px;
+      color: #66766e;
+      font-size: 0.75rem;
+    }
+  }
+
+  &__producto-resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    background: #f6f8f6;
+
+    span {
+      color: #66766e;
+      font-size: 0.65rem;
+    }
+
+    strong {
+      font-size: 0.83rem;
+    }
+  }
+
+  &__resumen-fila {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #e8ece9;
+    font-size: 0.78rem;
+
+    span {
+      color: #66766e;
+    }
+
+    strong {
+      text-align: right;
+    }
+  }
+
+  &__resultado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 12px;
+    margin-top: 14px;
+    background: #f2f6f3;
+    border-radius: 8px;
+
+    span {
+      font-size: 0.75rem;
+      color: #66766e;
+    }
+
+    strong {
+      color: #155b3d;
+      font-size: 1.15rem;
+      white-space: nowrap;
+    }
+
+    &--error strong {
+      color: #bd3f32;
+    }
+  }
+
+  &__error {
+    margin-top: 12px !important;
+    color: #bd3f32 !important;
+    font-size: 0.75rem;
+  }
+
+  // Botones del panel lateral.
+  &__acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+
+    small {
+      color: #66766e;
+      font-size: 0.7rem;
+    }
+  }
+
+  &__guardar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 9px;
+    min-height: 43px;
+    width: 100%;
+    border: 0;
+    border-radius: 8px;
+    background: #155b3d;
+    color: #fff;
+    font: inherit;
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__cancelar {
+    color: #66766e;
+    font-size: 0.8rem;
+    text-decoration: none;
+  }
+}
+
+// Adaptación a tabletas.
+@media (max-width: 1050px) {
+  .movimiento__distribucion {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Adaptación a teléfonos.
+@media (max-width: 700px) {
+  .movimiento {
+    &__tipos {
+      grid-template-columns: 1fr;
+    }
+
+    &__campos {
+      grid-template-columns: 1fr;
+    }
+
+    &__tarjeta {
+      padding: 16px;
+    }
+
+    &__codigo {
+      margin-left: 52px;
+    }
+  }
+}

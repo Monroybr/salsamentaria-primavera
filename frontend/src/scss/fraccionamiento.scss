@@ -1,0 +1,765 @@
+
+// Colores del módulo.
+$verde: #155b3d;
+$verde-oscuro: #123d2c;
+$texto: #17221d;
+$gris: #66766e;
+$borde: #dfe6e1;
+$fondo: #f6f8f6;
+
+// Estilos compartidos entre las dos pantallas.
+.fraccionamiento,
+.historial-fraccionamientos {
+  min-width: 0;
+
+  &__encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 24px;
+
+    h1 {
+      margin: 7px 0;
+      color: $texto;
+    }
+
+    p {
+      color: $gris;
+    }
+  }
+
+  &__tarjeta {
+    min-width: 0;
+    padding: 22px;
+    background: #fff;
+    border: 1px solid $borde;
+    border-radius: 11px;
+  }
+
+  &__tabla-scroll {
+    width: 100%;
+    overflow-x: auto;
+
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 15px 12px;
+      border-bottom: 1px solid #e8ece9;
+      text-align: left;
+      font-size: 0.8rem;
+    }
+
+    th {
+      color: $gris;
+      background: #f8faf8;
+      font-size: 0.7rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    td {
+      color: $texto;
+    }
+  }
+}
+
+// Pantalla principal de fraccionamiento.
+.fraccionamiento {
+  &__boton-historial,
+  &__guardar {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 8px;
+    background: $verde;
+    color: #fff;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    &:hover {
+      background: $verde-oscuro;
+    }
+  }
+
+  &__distribucion {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(250px, 1fr);
+    align-items: start;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  &__formulario,
+  &__lateral {
+    min-width: 0;
+  }
+
+  &__lateral {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  &__seccion {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    h2 {
+      margin: 0 0 5px;
+      font-size: 1rem;
+    }
+
+    p {
+      margin: 0;
+      color: $gris;
+      font-size: 0.75rem;
+    }
+  }
+
+  &__numero {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: $verde;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.8rem;
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+    min-width: 0;
+
+    label {
+      color: $texto;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-width: 0;
+      min-height: 43px;
+      padding: 10px 12px;
+      border: 1px solid $borde;
+      border-radius: 7px;
+      background: #fff;
+      color: $texto;
+      font: inherit;
+      font-size: 0.82rem;
+    }
+
+    textarea {
+      min-height: 85px;
+      resize: vertical;
+    }
+  }
+
+  &__fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    gap: 12px;
+  }
+
+  &__input-unidad {
+    position: relative;
+
+    input {
+      padding-right: 65px;
+    }
+
+    span {
+      position: absolute;
+      top: 50%;
+      right: 13px;
+      transform: translateY(-50%);
+      color: $gris;
+      font-size: 0.76rem;
+      pointer-events: none;
+    }
+  }
+
+  &__existencia {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-height: 43px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    border: 1px solid $borde;
+    border-radius: 7px;
+    background: $fondo;
+
+    > div {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    span,
+    small {
+      color: $gris;
+      font-size: 0.72rem;
+    }
+
+    strong {
+      font-size: 0.9rem;
+    }
+  }
+
+  &__separador {
+    height: 1px;
+    margin: 5px 0 22px;
+    border: 0;
+    background: $borde;
+  }
+
+  &__presentaciones {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0 0 18px;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  &__sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  &__opcion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px;
+    border: 1px solid $borde;
+    border-radius: 8px;
+    cursor: pointer;
+
+    input {
+      accent-color: $verde;
+      flex-shrink: 0;
+    }
+
+    strong,
+    small {
+      display: block;
+    }
+
+    strong {
+      font-size: 0.78rem;
+    }
+
+    small {
+      margin-top: 4px;
+      color: $gris;
+      font-size: 0.7rem;
+    }
+
+    &:has(input:checked) {
+      background: #e9f3ec;
+      border-color: $verde;
+      outline: 1px solid $verde;
+    }
+  }
+
+  &__acciones {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 20px;
+    border-top: 1px solid $borde;
+  }
+
+  &__cancelar {
+    min-height: 42px;
+    padding: 0 16px;
+    border: 1px solid $borde;
+    border-radius: 8px;
+    background: #fff;
+    color: $texto;
+    font: inherit;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+
+  &__mensaje {
+    margin: 14px 0 0;
+    padding: 12px;
+    border-radius: 7px;
+    background: #e9f3ec;
+    color: $verde;
+    font-size: 0.8rem;
+
+    &--error {
+      background: #fff0ed;
+      color: #b42318;
+    }
+  }
+
+  // Resumen de la operación.
+  &__icono-resumen {
+    display: grid;
+    place-items: center;
+    width: 43px;
+    height: 43px;
+    margin-bottom: 14px;
+    border-radius: 9px;
+    background: #e9f3ec;
+    color: $verde;
+
+    svg {
+      width: 21px;
+      height: 21px;
+    }
+  }
+
+  &__lateral h2 {
+    margin: 0 0 5px;
+    font-size: 0.95rem;
+  }
+
+  &__ayuda,
+  &__nota {
+    color: $gris;
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+
+  &__producto-resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 15px 0 8px;
+    padding: 12px;
+    border-radius: 7px;
+    background: $fondo;
+
+    small {
+      color: $gris;
+      font-size: 0.65rem;
+    }
+
+    strong {
+      font-size: 0.82rem;
+    }
+  }
+
+  &__dato,
+  &__diferencia {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 0;
+    border-bottom: 1px solid $borde;
+    font-size: 0.78rem;
+
+    span {
+      color: $gris;
+    }
+
+    strong {
+      text-align: right;
+    }
+  }
+
+  &__diferencia {
+    margin: 12px 0;
+    padding: 13px;
+    border: 0;
+    border-radius: 7px;
+    background: #fff3da;
+
+    strong,
+    span {
+      color: #bd760c;
+    }
+  }
+
+  &__valor-error {
+    color: #b42318 !important;
+  }
+
+  &__informacion {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+
+    > svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+      color: $verde;
+    }
+
+    strong {
+      font-size: 0.82rem;
+      color: $verde;
+    }
+
+    p {
+      margin: 7px 0 0;
+      color: $gris;
+      font-size: 0.72rem;
+      line-height: 1.5;
+    }
+  }
+
+  // Tabla de operaciones recientes.
+  &__recientes {
+    padding: 0;
+  }
+
+  &__recientes-titulo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 22px;
+
+    h2 {
+      margin: 0 0 5px;
+      font-size: 0.95rem;
+    }
+
+    p {
+      margin: 0;
+      color: $gris;
+      font-size: 0.75rem;
+    }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: $verde;
+      font-size: 0.78rem;
+      text-decoration: none;
+      white-space: nowrap;
+
+      svg {
+        width: 15px;
+        height: 15px;
+      }
+    }
+  }
+}
+
+// Pantalla de historial.
+.historial-fraccionamientos {
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  &__volver {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border: 1px solid $borde;
+    border-radius: 8px;
+    background: #fff;
+    color: $texto;
+  }
+
+  &__exportar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 16px;
+    border: 1px solid $borde;
+    border-radius: 8px;
+    background: #fff;
+    color: $texto;
+    font: inherit;
+    cursor: pointer;
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+  }
+
+  &__indicadores {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: 18px;
+    border: 1px solid $borde;
+    border-radius: 11px;
+    background: #fff;
+    overflow: hidden;
+
+    article {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 18px;
+      border-right: 1px solid $borde;
+
+      &:last-child {
+        border-right: 0;
+      }
+    }
+
+    span {
+      color: $gris;
+      font-size: 0.78rem;
+    }
+
+    strong {
+      font-size: 1.15rem;
+    }
+  }
+
+  &__merma {
+    color: #c77913;
+  }
+
+  &__filtros {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(3, auto);
+    gap: 10px;
+    margin-bottom: 18px;
+
+    select,
+    input {
+      width: 100%;
+      min-width: 0;
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px solid $borde;
+      border-radius: 8px;
+      background: #fff;
+      font: inherit;
+      font-size: 0.8rem;
+    }
+  }
+
+  &__buscar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+
+    svg {
+      position: absolute;
+      left: 12px;
+      width: 16px;
+      height: 16px;
+      color: $gris;
+    }
+
+    input {
+      padding-left: 38px;
+    }
+  }
+
+  &__tarjeta {
+    padding: 0;
+  }
+
+  &__tarjeta-titulo {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 22px;
+
+    h2 {
+      margin: 0 0 5px;
+      font-size: 1rem;
+    }
+
+    p {
+      margin: 0;
+      color: $gris;
+      font-size: 0.75rem;
+    }
+
+    > span {
+      align-self: center;
+      padding: 7px 12px;
+      border-radius: 20px;
+      background: #e9f3ec;
+      color: $verde;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+  }
+
+  &__tabla-scroll table {
+    min-width: 1150px;
+  }
+
+  &__vacio {
+    padding: 24px;
+    color: $gris;
+    text-align: center;
+  }
+
+  &__pie {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 18px;
+    color: $gris;
+    font-size: 0.75rem;
+  }
+
+  &__paginacion {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    button,
+    span {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid $borde;
+      border-radius: 6px;
+      background: #fff;
+      color: $texto;
+    }
+
+    button {
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+
+    span {
+      background: $verde;
+      color: #fff;
+      border-color: $verde;
+    }
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
+}
+
+// Tabletas.
+@media (max-width: 1100px) {
+  .fraccionamiento__distribucion {
+    grid-template-columns: 1fr;
+  }
+
+  .historial-fraccionamientos {
+    &__indicadores {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    &__filtros {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    &__buscar {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+// Teléfonos.
+@media (max-width: 700px) {
+  .fraccionamiento {
+    &__tarjeta {
+      padding: 16px;
+    }
+
+    &__recientes {
+      padding: 0;
+    }
+
+    &__fila,
+    &__presentaciones {
+      grid-template-columns: 1fr;
+    }
+
+    &__acciones {
+      flex-direction: column-reverse;
+
+      button {
+        width: 100%;
+      }
+    }
+
+    &__recientes-titulo {
+      padding: 16px;
+    }
+  }
+
+  .historial-fraccionamientos {
+    &__indicadores {
+      grid-template-columns: 1fr 1fr;
+
+      article {
+        padding: 14px;
+      }
+
+      strong {
+        font-size: 0.95rem;
+      }
+    }
+
+    &__filtros {
+      grid-template-columns: 1fr;
+    }
+
+    &__buscar {
+      grid-column: auto;
+    }
+
+    &__tarjeta-titulo {
+      padding: 16px;
+    }
+  }
+}

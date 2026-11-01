@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes | Salsamentaria Primavera</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="dashboard-page reportes-page">
+
+  <!-- Componentes compartidos del sistema -->
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+
+    {% include "header.njk" %}
+
+    <main class="dashboard reportes">
+
+      <!-- ENCABEZADO -->
+      <div class="reportes__encabezado">
+        <div>
+          <p class="dashboard__ruta">
+            Salsamentaria Primavera / Reportes
+          </p>
+
+          <h1>Reportes</h1>
+          <p>Analiza el desempeño de tu negocio.</p>
+        </div>
+
+        <button
+          type="button"
+          class="reportes__boton-principal"
+          id="descargarReporte"
+        >
+          <i data-lucide="download"></i>
+          Descargar reporte
+        </button>
+      </div>
+
+      <!-- FILTROS DEL REPORTE -->
+      <section class="reportes__filtros">
+
+        <div class="reportes__campo">
+          <label for="periodoReporte">Período</label>
+          <select id="periodoReporte">
+            <option value="mes">Este mes</option>
+            <option value="anterior">Mes anterior</option>
+            <option value="semana">Últimos 7 días</option>
+            <option value="personalizado">Personalizado</option>
+          </select>
+        </div>
+
+        <div class="reportes__campo">
+          <label for="fechaDesdeReporte">Desde</label>
+          <input
+            type="date"
+            id="fechaDesdeReporte"
+            value="2025-03-01"
+          >
+        </div>
+
+        <div class="reportes__campo">
+          <label for="fechaHastaReporte">Hasta</label>
+          <input
+            type="date"
+            id="fechaHastaReporte"
+            value="2025-03-31"
+          >
+        </div>
+
+        <button
+          type="button"
+          class="reportes__boton-principal reportes__generar"
+          id="generarReporte"
+        >
+          Generar reporte
+        </button>
+
+      </section>
+
+      <!-- INDICADORES -->
+      <section class="reportes__indicadores">
+
+        <article class="reportes__indicador">
+          <div class="reportes__indicador-icono reportes__indicador-icono--verde">
+            <i data-lucide="wallet"></i>
+          </div>
+
+          <div>
+            <span>Ingresos totales</span>
+            <strong id="ingresosReporte">$0</strong>
+            <small id="variacionIngresos">Período seleccionado</small>
+          </div>
+        </article>
+
+        <article class="reportes__indicador">
+          <div class="reportes__indicador-icono reportes__indicador-icono--azul">
+            <i data-lucide="package"></i>
+          </div>
+
+          <div>
+            <span>Unidades vendidas</span>
+            <strong id="unidadesReporte">0</strong>
+            <small id="variacionUnidades">Período seleccionado</small>
+          </div>
+        </article>
+
+        <article class="reportes__indicador">
+          <div class="reportes__indicador-icono reportes__indicador-icono--naranja">
+            <i data-lucide="trending-up"></i>
+          </div>
+
+          <div>
+            <span>Ticket promedio</span>
+            <strong id="ticketReporte">$0</strong>
+            <small id="variacionTicket">Período seleccionado</small>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- GRÁFICA Y PRODUCTOS MÁS VENDIDOS -->
+      <div class="reportes__contenido">
+
+        <!-- Gráfica -->
+        <section class="reportes__tarjeta reportes__grafica">
+
+          <div class="reportes__tarjeta-encabezado">
+            <h2>Ventas por semana</h2>
+            <p id="descripcionGrafica">
+              Comportamiento durante marzo
+            </p>
+          </div>
+
+          <div class="reportes__grafica-contenedor">
+            <canvas
+              id="graficaVentasReporte"
+              aria-label="Gráfica de ingresos por semana"
+              role="img"
+            ></canvas>
+          </div>
+
+        </section>
+
+        <!-- Productos -->
+        <section class="reportes__tarjeta reportes__productos">
+
+          <div class="reportes__tarjeta-encabezado">
+            <h2>Productos más vendidos</h2>
+            <p>Por ingresos generados</p>
+          </div>
+
+          <div id="listaProductosReporte"
+               class="reportes__lista-productos">
+          </div>
+
+          <p id="sinProductosReporte"
+             class="reportes__sin-datos"
+             hidden>
+            No hay ventas registradas en este período.
+          </p>
+
+        </section>
+
+      </div>
+
+      <p id="mensajeReportes"
+         class="reportes__mensaje"
+         role="status"
+         hidden></p>
+
+    </main>
+
+  </div>
+
+  <div class="dashboard-overlay" id="dashboardOverlay"></div>
+
+  <!-- Librería para la gráfica -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+  <!-- Iconos -->
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+  <!-- Scripts -->
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/reportes.js"></script>
+
+</body>
+</html>

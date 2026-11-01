@@ -1,0 +1,244 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario | Salsamentaria Primavera</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="dashboard-page inventario-page">
+
+  {% include "sidebar.njk" %}
+
+  <div class="dashboard-layout">
+
+    {% include "header.njk" %}
+
+    <main class="dashboard inventario">
+
+      <!-- Encabezado -->
+      <div class="inventario__encabezado">
+        <div>
+          <p class="dashboard__ruta">
+            Salsamentaria Primavera / Inventario
+          </p>
+          <h1>Inventario</h1>
+          <p>Consulta existencias a granel y empacadas, movimientos y alertas.</p>
+        </div>
+
+        <a href="registrar-movimiento.html"
+           class="dashboard__nueva-venta">
+          <i data-lucide="plus"></i>
+          <span>Registrar movimiento</span>
+        </a>
+      </div>
+
+      <!-- Indicadores -->
+      <section class="inventario__resumen">
+        <article>
+          <span>Productos a granel</span>
+          <strong>42 referencias</strong>
+        </article>
+
+        <article>
+          <span>Presentaciones empacadas</span>
+          <strong>86 referencias</strong>
+        </article>
+
+        <article>
+          <span>Stock mínimo</span>
+          <strong class="inventario__advertencia">8 alertas</strong>
+        </article>
+
+        <article>
+          <span>Movimientos de hoy</span>
+          <strong>14 registros</strong>
+        </article>
+      </section>
+
+      <!-- Pestañas -->
+      <div class="inventario__pestanas" role="tablist"
+           aria-label="Secciones de inventario">
+
+        <button class="inventario__pestana activa"
+                type="button" data-tab="existencias"
+                role="tab" aria-selected="true">
+          <i data-lucide="archive"></i>
+          Existencias
+        </button>
+
+        <button class="inventario__pestana"
+                type="button" data-tab="movimientos"
+                role="tab" aria-selected="false">
+          <i data-lucide="arrow-left-right"></i>
+          Entradas y salidas
+        </button>
+
+        <button class="inventario__pestana"
+                type="button" data-tab="alertas"
+                role="tab" aria-selected="false">
+          <i data-lucide="alert-triangle"></i>
+          Alertas
+          <span class="inventario__contador-alertas">8</span>
+        </button>
+      </div>
+
+      <!-- Contenido: Existencias -->
+      <section id="panel-existencias"
+               class="inventario__panel"
+               role="tabpanel">
+
+        <!-- Filtros -->
+        <div class="inventario__filtros">
+          <label class="inventario__buscar">
+            <i data-lucide="search"></i>
+            <input type="search" id="buscarInventario"
+                   placeholder="Buscar producto o presentación..."
+                   aria-label="Buscar en inventario">
+          </label>
+
+          <select id="filtroTipo" aria-label="Filtrar por tipo">
+            <option value="todos">Granel y empacados</option>
+            <option value="granel">A granel</option>
+            <option value="empacado">Empacado</option>
+          </select>
+
+          <select id="filtroInventarioEstado"
+                  aria-label="Filtrar por estado">
+            <option value="todos">Todos los estados</option>
+            <option value="disponible">Disponible</option>
+            <option value="bajo">Stock bajo</option>
+          </select>
+        </div>
+
+        <div class="inventario__distribucion">
+
+          <!-- Tabla principal -->
+          <div class="inventario__tabla-contenedor">
+            <div class="inventario__tabla-scroll">
+              <table class="inventario__tabla">
+                <thead>
+                  <tr>
+                    <th>PRODUCTO / PRESENTACIÓN</th>
+                    <th>TIPO</th>
+                    <th>EXISTENCIAS</th>
+                    <th>NIVEL</th>
+                    <th>STOCK MÍNIMO</th>
+                    <th>ESTADO</th>
+                  </tr>
+                </thead>
+
+                <tbody id="tablaInventario">
+                  <!-- JavaScript insertará los productos -->
+                </tbody>
+              </table>
+            </div>
+
+            <p id="inventarioSinResultados"
+               class="inventario__sin-resultados" hidden>
+              No se encontraron productos.
+            </p>
+
+            <!-- Paginación -->
+            <div class="inventario__paginacion">
+              <span id="inventarioPaginacionTexto"></span>
+              <div id="inventarioPaginacionBotones"></div>
+            </div>
+          </div>
+
+          <!-- Panel de alertas -->
+          <aside class="inventario__alertas-lateral">
+            <div class="inventario__alertas-titulo">
+              <div>
+                <h2>Requieren atención</h2>
+                <p>Existencias bajo el mínimo</p>
+              </div>
+              <span>8</span>
+            </div>
+
+            <div class="inventario__alerta">
+              <i data-lucide="alert-triangle"></i>
+              <div>
+                <strong>Queso campesino</strong>
+                <small>3,2 kg disponibles</small>
+                <small>Mínimo: 5 kg</small>
+              </div>
+            </div>
+
+            <div class="inventario__alerta">
+              <i data-lucide="alert-triangle"></i>
+              <div>
+                <strong>Chorizo santarrosano - 1 kg</strong>
+                <small>8 bolsas disponibles</small>
+                <small>Mínimo: 10 bolsas</small>
+              </div>
+            </div>
+
+            <button type="button"
+                    class="inventario__ver-alertas"
+                    id="verTodasAlertas">
+              Ver todas las alertas
+              <i data-lucide="arrow-right"></i>
+            </button>
+          </aside>
+
+        </div>
+      </section>
+
+      <!-- Contenido: Entradas y salidas -->
+      <section id="panel-movimientos"
+               class="inventario__panel" role="tabpanel" hidden>
+        <div class="inventario__seccion">
+          <div class="inventario__seccion-titulo">
+            <div>
+              <h2>Entradas y salidas</h2>
+              <p>Últimos movimientos registrados en el inventario.</p>
+            </div>
+            <a href="registrar-movimiento.html"
+               class="inventario__enlace">
+              <i data-lucide="plus"></i> Nuevo movimiento
+            </a>
+          </div>
+
+          <div class="inventario__tabla-scroll">
+            <table class="inventario__tabla">
+              <thead>
+                <tr>
+                  <th>FECHA</th>
+                  <th>PRODUCTO</th>
+                  <th>MOVIMIENTO</th>
+                  <th>CANTIDAD</th>
+                  <th>RESPONSABLE</th>
+                </tr>
+              </thead>
+              <tbody id="tablaMovimientos"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contenido: Alertas -->
+      <section id="panel-alertas"
+               class="inventario__panel" role="tabpanel" hidden>
+        <div class="inventario__seccion">
+          <h2>Alertas de inventario</h2>
+          <p>Productos que necesitan reposición.</p>
+          <div id="listaAlertas" class="inventario__lista-alertas"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Fondo del menú móvil -->
+  <div class="dashboard-overlay" id="dashboardOverlay"></div>
+
+  <!-- Iconos y scripts -->
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/navegacion.js"></script>
+  <script src="js/inventario.js"></script>
+</body>
+</html>
