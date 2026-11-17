@@ -1,19 +1,52 @@
+/*
+ * SALSAMENTARIA PRIMAVERA
+ * MÓDULO CARTERA
+ *
+ * Consulta saldos pendientes desde MySQL.
+ */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+
   const datos = window.CarteraDatos;
   const tabla = document.getElementById('tablaCartera');
 
   if (!datos || !tabla) return;
 
-  const filtro = document.getElementById('filtroFechasCartera');
-  const sinCuentas = document.getElementById('sinCuentasCartera');
+  const filtro = document.getElementById(
+    'filtroFechasCartera'
+  );
+
+  const sinCuentas = document.getElementById(
+    'sinCuentasCartera'
+  );
+
+  let cuentas = [];
+
+  // ==========================================
+  // FECHAS
+  // ==========================================
 
   function fechaVisible(valor) {
     if (!valor) return 'Sin fecha';
 
-    const [anio, mes, dia] = valor.split('-').map(Number);
+    const partes = String(valor)
+      .substring(0, 10)
+      .split('-')
+      .map(Number);
 
+    if (
+      partes.length !== 3 ||
+      partes.some(numero => !Number.isFinite(numero))
+    ) {
+      return String(valor);
+    }
+
+    const [anio, mes, dia] = partes;
     const fecha = new Date(anio, mes - 1, dia);
+
+    if (Number.isNaN(fecha.getTime())) {
+      return String(valor);
+    }
 
     return fecha.toLocaleDateString('es-CO', {
       day: 'numeric',
@@ -22,85 +55,156 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Comparar fechas locales sin problemas de zona horaria.
-  function diasHasta(fecha) {
-    if (!fecha) return null;
+  function diasHasta(valor) {
+    if (!valor) return null;
 
-    const [anio, mes, dia] = fecha.split('-').map(Number);
-    const objetivo = new Date(anio, mes - 1, dia);
+    const [anio, mes, dia] = String(valor)
+      .substring(0, 10)
+      .split('-')
+      .map(Number);
+
+    if (![anio, mes, dia].every(Number.isFinite)) {
+      return null;
+    }
+
     const hoy = new Date();
+    const objetivo = new Date(anio, mes - 1, dia);
 
     hoy.setHours(0, 0, 0, 0);
+    objetivo.setHours(0, 0, 0, 0);
+
+    const inicioHoy = Date.UTC(
+      hoy.getFullYear(),
+      hoy.getMonth(),
+      hoy.getDate()
+    );
+
+    const inicioObjetivo = Date.UTC(
+      objetivo.getFullYear(),
+      objetivo.getMonth(),
+      objetivo.getDate()
+    );
 
     return Math.round(
-      (objetivo - hoy) / 86400000
+      (inicioObjetivo - inicioHoy) / 86400000
     );
   }
+
+  // ==========================================
+  // ESTADO DE CUENTA
+  // ==========================================
 
   function estadoCuenta(cuenta) {
     const dias = diasHasta(cuenta.vencimiento);
 
-    if (dias !== null && dias < 0) return 'vencida';
+    if (dias !== null && dias < 0) {
+      return {
+        texto: 'Vencida',
+        clase: 'vencida'
+      };
+    }
 
-    return 'pendiente';
+    if (cuenta.estado === 'PARCIAL') {
+      return {
+        texto: 'Abonada parcialmente',
+        clase: 'pendiente'
+      };
+    }
+
+    return {
+      texto: 'Pendiente',
+      clase: 'pendiente'
+    };
   }
+
+  // ==========================================
+  // CREAR CELDA
+  // ==========================================
 
   function crearCelda(texto, clase = '') {
     const td = document.createElement('td');
-    td.textContent = texto;
 
-    if (clase) td.className = clase;
+    td.textContent = texto ?? '';
+
+    if (clase) {
+      td.className = clase;
+    }
 
     return td;
   }
 
-  // Indicadores basados en los saldos actuales.
-  function actualizarIndicadores() {
-    const cuentas = datos.obtenerPendientes();
+  // ==========================================
+  // ACTUALIZAR INDICADORES
+  // ==========================================
 
+  function actualizarIndicadores() {
     const total = cuentas.reduce(
-      (suma, c) => suma + Number(c.saldoPendiente), 0
+      (suma, cuenta) =>
+        suma + Number(cuenta.saldoPendiente),
+      0
     );
 
     const porVencer = cuentas
-      .filter(c => {
-        const dias = diasHasta(c.vencimiento);
-        return dias !== null && dias >= 0 && dias <= 7;
+      .filter(cuenta => {
+        const dias = diasHasta(cuenta.vencimiento);
+
+        return dias !== null &&
+          dias >= 0 &&
+          dias <= 7;
       })
       .reduce(
-        (suma, c) => suma + Number(c.saldoPendiente), 0
+        (suma, cuenta) =>
+          suma + Number(cuenta.saldoPendiente),
+        0
       );
 
     const vencida = cuentas
-      .filter(c => estadoCuenta(c) === 'vencida')
+      .filter(cuenta => {
+        const dias = diasHasta(cuenta.vencimiento);
+
+        return dias !== null && dias < 0;
+      })
       .reduce(
-        (suma, c) => suma + Number(c.saldoPendiente), 0
+        (suma, cuenta) =>
+          suma + Number(cuenta.saldoPendiente),
+        0
       );
 
     const clientes = new Set(
-      cuentas.map(c => c.clienteId || datos.normalizar(c.cliente))
+      cuentas.map(cuenta =>
+        cuenta.clienteId ||
+        datos.normalizar(cuenta.cliente)
+      )
     );
 
-    document.getElementById('carteraTotal').textContent =
-      datos.dinero(total);
+    document.getElementById(
+      'carteraTotal'
+    ).textContent = datos.dinero(total);
 
-    document.getElementById('carteraPorVencer').textContent =
-      datos.dinero(porVencer);
+    document.getElementById(
+      'carteraPorVencer'
+    ).textContent = datos.dinero(porVencer);
 
-    document.getElementById('carteraVencida').textContent =
-      datos.dinero(vencida);
+    document.getElementById(
+      'carteraVencida'
+    ).textContent = datos.dinero(vencida);
 
-    document.getElementById('clientesConSaldo').textContent =
+    document.getElementById(
+      'clientesConSaldo'
+    ).textContent =
       `${clientes.size} clientes con saldo`;
   }
 
-  // Construir la tabla.
+  // ==========================================
+  // MOSTRAR TABLA
+  // ==========================================
+
   function mostrarTabla() {
     tabla.replaceChildren();
 
-    const seleccion = filtro.value;
+    const seleccion = filtro ? filtro.value : 'todas';
 
-    const cuentas = datos.obtenerPendientes().filter(cuenta => {
+    const filtradas = cuentas.filter(cuenta => {
       const dias = diasHasta(cuenta.vencimiento);
 
       if (seleccion === 'vencidas') {
@@ -108,7 +212,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (seleccion === 'proximas') {
-        return dias !== null && dias >= 0 && dias <= 7;
+        return dias !== null &&
+          dias >= 0 &&
+          dias <= 7;
       }
 
       if (seleccion === 'vigentes') {
@@ -118,19 +224,33 @@ document.addEventListener('DOMContentLoaded', () => {
       return true;
     });
 
-    cuentas.forEach(cuenta => {
+    filtradas.forEach(cuenta => {
       const fila = document.createElement('tr');
 
       fila.appendChild(
-        crearCelda(cuenta.cliente, 'cartera__cliente')
+        crearCelda(
+          cuenta.cliente,
+          'cartera__cliente'
+        )
       );
 
-      fila.appendChild(crearCelda(cuenta.ventaId));
-      fila.appendChild(crearCelda(fechaVisible(cuenta.fecha)));
-      fila.appendChild(crearCelda(fechaVisible(cuenta.vencimiento)));
+      fila.appendChild(
+        crearCelda(cuenta.ventaId)
+      );
 
       fila.appendChild(
-        crearCelda(datos.dinero(cuenta.saldoPendiente), 'cartera__saldo')
+        crearCelda(fechaVisible(cuenta.fecha))
+      );
+
+      fila.appendChild(
+        crearCelda(fechaVisible(cuenta.vencimiento))
+      );
+
+      fila.appendChild(
+        crearCelda(
+          datos.dinero(cuenta.saldoPendiente),
+          'cartera__saldo'
+        )
       );
 
       const tdEstado = document.createElement('td');
@@ -139,11 +259,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const estado = estadoCuenta(cuenta);
 
       etiqueta.className =
-        `cartera__estado cartera__estado--${estado}`;
+        `cartera__estado cartera__estado--${estado.clase}`;
 
-      etiqueta.textContent = estado === 'vencida'
-        ? 'Vencida'
-        : 'Pendiente';
+      etiqueta.textContent = estado.texto;
 
       tdEstado.appendChild(etiqueta);
       fila.appendChild(tdEstado);
@@ -162,16 +280,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
       tdAccion.appendChild(boton);
       fila.appendChild(tdAccion);
+
       tabla.appendChild(fila);
     });
 
-    sinCuentas.hidden = cuentas.length !== 0;
+    if (sinCuentas) {
+      sinCuentas.hidden = filtradas.length !== 0;
+    }
   }
 
-  filtro.addEventListener('change', mostrarTabla);
+  // ==========================================
+  // CONSULTAR MYSQL
+  // ==========================================
 
-  actualizarIndicadores();
-  mostrarTabla();
+  async function cargarCartera() {
+    try {
+      cuentas = await datos.obtenerPendientes();
 
-  if (window.lucide) window.lucide.createIcons();
+      actualizarIndicadores();
+      mostrarTabla();
+
+    } catch (error) {
+      console.error(
+        'Error al cargar cartera:',
+        error
+      );
+
+      cuentas = [];
+
+      actualizarIndicadores();
+      tabla.replaceChildren();
+
+      if (sinCuentas) {
+        sinCuentas.textContent =
+          error.message ||
+          'No fue posible consultar las cuentas por cobrar.';
+
+        sinCuentas.hidden = false;
+      }
+    }
+  }
+
+  if (filtro) {
+    filtro.addEventListener(
+      'change',
+      mostrarTabla
+    );
+  }
+
+  await cargarCartera();
+
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+
 });

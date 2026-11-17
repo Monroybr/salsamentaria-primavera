@@ -1,107 +1,36 @@
-
 document.addEventListener('DOMContentLoaded', () => {
+  // ==========================================
+  // CONFIGURACIÓN
+  // ==========================================
 
-  // Datos de ejemplo mientras desarrollamos el backend.
-  const productos = [
-    {
-      nombre: 'Jamón de cerdo premium',
-      codigo: 'SAL-001',
-      detalle: 'Producto base',
-      tipo: 'granel',
-      existencia: '18,5 kg',
-      nivel: 75,
-      minimo: '5 kg',
-      estado: 'disponible'
-    },
-    {
-      nombre: 'Jamón premium - Media libra',
-      codigo: 'SAL-001-250',
-      detalle: 'Presentación empacada',
-      tipo: 'empacado',
-      existencia: '36 bolsas',
-      nivel: 65,
-      minimo: '12 bolsas',
-      estado: 'disponible'
-    },
-    {
-      nombre: 'Jamón premium - Una libra',
-      codigo: 'SAL-001-500',
-      detalle: 'Presentación empacada',
-      tipo: 'empacado',
-      existencia: '14 bolsas',
-      nivel: 35,
-      minimo: '10 bolsas',
-      estado: 'disponible'
-    },
-    {
-      nombre: 'Queso campesino',
-      codigo: 'LAC-014',
-      detalle: 'Producto base',
-      tipo: 'granel',
-      existencia: '3,2 kg',
-      nivel: 15,
-      minimo: '5 kg',
-      estado: 'bajo'
-    },
-    {
-      nombre: 'Chorizo santarrosano - 1 kg',
-      codigo: 'EMB-011',
-      detalle: 'Presentación empacada',
-      tipo: 'empacado',
-      existencia: '8 bolsas',
-      nivel: 25,
-      minimo: '10 bolsas',
-      estado: 'bajo'
-    },
-    {
-      nombre: 'Mortadela tradicional',
-      codigo: 'SAL-022',
-      detalle: 'Producto base',
-      tipo: 'granel',
-      existencia: '12,7 kg',
-      nivel: 65,
-      minimo: '5 kg',
-      estado: 'disponible'
-    }
-  ];
-
-  const movimientos = [
-    {
-      fecha: 'Hoy, 9:30 a. m.',
-      producto: 'Harina de trigo',
-      tipo: 'Entrada',
-      cantidad: '+10 kg',
-      responsable: 'Ana Martínez'
-    },
-    {
-      fecha: 'Hoy, 8:15 a. m.',
-      producto: 'Queso campesino',
-      tipo: 'Salida',
-      cantidad: '-2 kg',
-      responsable: 'Ana Martínez'
-    },
-    {
-      fecha: 'Ayer, 4:20 p. m.',
-      producto: 'Mortadela tradicional',
-      tipo: 'Ajuste',
-      cantidad: '-0,5 kg',
-      responsable: 'Ana Martínez'
-    }
-  ];
-
-  const tabla = document.getElementById('tablaInventario');
-  const buscador = document.getElementById('buscarInventario');
-  const filtroTipo = document.getElementById('filtroTipo');
-  const filtroEstado = document.getElementById('filtroInventarioEstado');
-  const textoPagina = document.getElementById('inventarioPaginacionTexto');
-  const botonesPagina = document.getElementById('inventarioPaginacionBotones');
-
-  let paginaActual = 1;
+  const API_URL = 'http://localhost:4000/api';
   const porPagina = 5;
 
-  // Evita insertar texto del usuario como código HTML.
+  let productos = [];
+  let movimientos = [];
+  let paginaActual = 1;
+
+  // ==========================================
+  // ELEMENTOS HTML
+  // ==========================================
+
+  const obtener = id => document.getElementById(id);
+
+  const tabla = obtener('tablaInventario');
+  const buscador = obtener('buscarInventario');
+  const filtroTipo = obtener('filtroTipo');
+  const filtroEstado = obtener('filtroInventarioEstado');
+  const botonesPagina = obtener('inventarioPaginacionBotones');
+  const tablaMovimientos = obtener('tablaMovimientos');
+  const listaAlertas = obtener('listaAlertas');
+  const alertasLaterales = obtener('alertasLaterales');
+
+  // ==========================================
+  // FUNCIONES AUXILIARES
+  // ==========================================
+
   function escapar(texto) {
-    return String(texto).replace(/[&<>"']/g, caracter => ({
+    return String(texto ?? '').replace(/[&<>"']/g, caracter => ({
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
@@ -111,115 +40,415 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function normalizar(texto) {
-    return String(texto)
+    return String(texto ?? '')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase();
   }
 
-  // Filtra los productos por búsqueda, tipo y estado.
-  function obtenerFiltrados() {
-    const texto = normalizar(buscador.value);
-    return productos.filter(producto => {
-      const coincideTexto = normalizar(
-        producto.nombre + ' ' + producto.codigo
-      ).includes(texto);
+  function escribir(id, texto) {
+    const elemento = obtener(id);
 
-      const coincideTipo = filtroTipo.value === 'todos' ||
-        producto.tipo === filtroTipo.value;
+    if (elemento) {
+      elemento.textContent = String(texto);
+    }
+  }
 
-      const coincideEstado = filtroEstado.value === 'todos' ||
-        producto.estado === filtroEstado.value;
+  function actualizarIconos() {
+    window.lucide?.createIcons();
+  }
 
-      return coincideTexto && coincideTipo && coincideEstado;
+  function formatearNumero(numero) {
+    return Number(numero).toLocaleString('es-CO', {
+      maximumFractionDigits: 2
     });
   }
 
-  // Construye las filas de la tabla.
-  function renderizarInventario() {
-    const filtrados = obtenerFiltrados();
-    const totalPaginas = Math.max(
-      1, Math.ceil(filtrados.length / porPagina)
+  // ==========================================
+  // NORMALIZAR PRODUCTOS DE MYSQL
+  // ==========================================
+
+  function transformarProducto(producto) {
+    const stock = Number(producto.stock_actual);
+    const minimo = Number(producto.stock_minimo);
+
+    const stockValido =
+      producto.stock_actual != null &&
+      Number.isFinite(stock) &&
+      stock >= 0;
+
+    const minimoValido =
+      producto.stock_minimo != null &&
+      Number.isFinite(minimo) &&
+      minimo >= 0;
+
+    const stockActual = stockValido ? stock : null;
+    const stockMinimo = minimoValido ? minimo : null;
+
+    const tipoRecibido = normalizar(
+      producto.tipo_presentacion ??
+      producto.tipo ??
+      ''
     );
 
-    paginaActual = Math.min(paginaActual, totalPaginas);
+    let tipo = 'sin-clasificar';
+
+    if (['granel', 'a granel'].includes(tipoRecibido)) {
+      tipo = 'granel';
+    }
+
+    if (['empacado', 'empaque'].includes(tipoRecibido)) {
+      tipo = 'empacado';
+    }
+
+    const bajo =
+      stockValido &&
+      minimoValido &&
+      stockActual <= stockMinimo;
+
+    const nivel = stockValido && minimoValido
+      ? Math.min(
+          100,
+          Math.round(
+            stockActual / Math.max(stockMinimo * 2, 1) * 100
+          )
+        )
+      : null;
+
+    return {
+      id: producto.id_producto,
+      nombre: producto.nombre || 'Producto sin nombre',
+      codigo: producto.codigo || 'Sin código',
+      detalle: producto.descripcion || 'Sin descripción',
+      tipo,
+      stockActual,
+      stockMinimo,
+      unidad: String(producto.unidad_medida || 'unidades'),
+      nivel,
+      estado: !stockValido || !minimoValido
+        ? 'sin-datos'
+        : bajo ? 'bajo' : 'disponible'
+    };
+  }
+
+  // ==========================================
+  // CONSULTAR API
+  // ==========================================
+
+  async function consultar(ruta) {
+    const respuesta = await fetch(
+      `${API_URL}/${ruta}`,
+      { cache: 'no-store' }
+    );
+
+    if (!respuesta.ok) {
+      throw new Error(
+        `Error HTTP ${respuesta.status} en ${ruta}`
+      );
+    }
+
+    const datos = await respuesta.json();
+
+    if (!Array.isArray(datos)) {
+      throw new Error(
+        `Respuesta no válida en ${ruta}`
+      );
+    }
+
+    return datos;
+  }
+
+  // ==========================================
+  // CARGAR PRODUCTOS DESDE MYSQL
+  // ==========================================
+
+  async function cargarProductos() {
+    escribir('totalAlertas', 'Cargando...');
+
+    try {
+      productos = (
+        await consultar('productos')
+      ).map(transformarProducto);
+
+      paginaActual = 1;
+
+      actualizarIndicadores();
+      renderizarInventario();
+      renderizarAlertas();
+
+      console.log(
+        'Productos cargados desde MySQL:',
+        productos.length
+      );
+
+    } catch (error) {
+      console.error(
+        'No fue posible consultar productos:',
+        error
+      );
+
+      productos = [];
+
+      actualizarIndicadores();
+      renderizarInventario();
+      renderizarAlertas();
+
+      escribir('totalAlertas', 'Sin conexión');
+
+      escribir(
+        'inventarioPaginacionTexto',
+        'No fue posible cargar el inventario'
+      );
+
+      if (alertasLaterales) {
+        alertasLaterales.textContent =
+          'No se pudieron consultar las alertas.';
+      }
+
+      if (listaAlertas) {
+        listaAlertas.textContent =
+          'No se pudieron consultar las alertas.';
+      }
+    }
+  }
+
+  // ==========================================
+  // INDICADORES DE INVENTARIO
+  // ==========================================
+
+  function actualizarIndicadores() {
+    const granel = productos.filter(
+      p => p.tipo === 'granel'
+    ).length;
+
+    const empacados = productos.filter(
+      p => p.tipo === 'empacado'
+    ).length;
+
+    const sinClasificar = productos.some(
+      p => p.tipo === 'sin-clasificar'
+    );
+
+    const alertas = productos.filter(
+      p => p.estado === 'bajo'
+    ).length;
+
+    escribir(
+      'totalGranel',
+      sinClasificar
+        ? 'Por clasificar'
+        : `${granel} referencias`
+    );
+
+    escribir(
+      'totalEmpacados',
+      sinClasificar
+        ? 'Por clasificar'
+        : `${empacados} referencias`
+    );
+
+    escribir('totalAlertas', `${alertas} alertas`);
+    escribir('contadorAlertasPestana', alertas);
+    escribir('contadorAlertasLateral', alertas);
+  }
+
+  // ==========================================
+  // FILTRAR PRODUCTOS
+  // ==========================================
+
+  function obtenerFiltrados() {
+    const texto = normalizar(buscador?.value || '');
+
+    return productos.filter(producto => {
+      const coincideTexto = normalizar(
+        `${producto.nombre} ${producto.codigo}`
+      ).includes(texto);
+
+      const coincideTipo =
+        !filtroTipo ||
+        filtroTipo.value === 'todos' ||
+        producto.tipo === filtroTipo.value;
+
+      const coincideEstado =
+        !filtroEstado ||
+        filtroEstado.value === 'todos' ||
+        producto.estado === filtroEstado.value;
+
+      return (
+        coincideTexto &&
+        coincideTipo &&
+        coincideEstado
+      );
+    });
+  }
+
+  // ==========================================
+  // MOSTRAR INVENTARIO
+  // ==========================================
+
+  function renderizarInventario() {
+    if (!tabla) return;
+
+    const filtrados = obtenerFiltrados();
+
+    const totalPaginas = Math.max(
+      1,
+      Math.ceil(filtrados.length / porPagina)
+    );
+
+    paginaActual = Math.min(
+      paginaActual,
+      totalPaginas
+    );
 
     const inicio = (paginaActual - 1) * porPagina;
-    const visibles = filtrados.slice(inicio, inicio + porPagina);
+
+    const visibles = filtrados.slice(
+      inicio,
+      inicio + porPagina
+    );
 
     tabla.innerHTML = visibles.map(producto => {
       const bajo = producto.estado === 'bajo';
-      const tipoTexto = producto.tipo === 'granel'
-        ? 'A granel' : 'Empacado';
+
+      const tipoTexto = {
+        granel: 'A granel',
+        empacado: 'Empacado',
+        'sin-clasificar': 'Sin clasificar'
+      }[producto.tipo];
+
+      const existencia = producto.stockActual === null
+        ? 'Sin dato'
+        : `${formatearNumero(producto.stockActual)} ${producto.unidad}`;
+
+      const minimo = producto.stockMinimo === null
+        ? 'Sin dato'
+        : `${formatearNumero(producto.stockMinimo)} ${producto.unidad}`;
+
+      const estadoTexto = producto.estado === 'sin-datos'
+        ? 'Sin datos'
+        : bajo ? 'Stock bajo' : 'Disponible';
+
+      const nivelHTML = producto.nivel === null
+        ? 'Sin dato'
+        : `
+          <div class="inventario__nivel">
+            <div class="inventario__nivel-pista">
+              <span
+                class="${bajo ? 'bajo' : ''}"
+                style="width:${producto.nivel}%">
+              </span>
+            </div>
+            <small>${producto.nivel}%</small>
+          </div>
+        `;
 
       return `
         <tr>
           <td>
             <div class="inventario__producto">
               <span class="inventario__producto-icono">
-                <i data-lucide="${producto.tipo === 'granel'
-                  ? 'package' : 'archive'}"></i>
+                <i data-lucide="package"></i>
               </span>
+
               <div>
                 <strong>${escapar(producto.nombre)}</strong>
-                <small>${escapar(producto.codigo)} ·
-                  ${escapar(producto.detalle)}</small>
+                <small>
+                  ${escapar(producto.codigo)} ·
+                  ${escapar(producto.detalle)}
+                </small>
               </div>
             </div>
           </td>
+
           <td>
             <span class="inventario__tipo inventario__tipo--${producto.tipo}">
               ${tipoTexto}
             </span>
           </td>
-          <td><strong>${escapar(producto.existencia)}</strong></td>
+
           <td>
-            <div class="inventario__nivel">
-              <div class="inventario__nivel-pista">
-                <span class="${bajo ? 'bajo' : ''}"
-                      style="width:${producto.nivel}%"></span>
-              </div>
-              <small>${producto.nivel}%</small>
-            </div>
+            <strong>${escapar(existencia)}</strong>
           </td>
-          <td>${escapar(producto.minimo)}</td>
+
+          <td>${nivelHTML}</td>
+
+          <td>${escapar(minimo)}</td>
+
           <td>
             <span class="inventario__estado ${bajo ? 'bajo' : ''}">
-              ${bajo ? 'Stock bajo' : 'Disponible'}
+              ${estadoTexto}
             </span>
           </td>
         </tr>
       `;
     }).join('');
 
-    document.getElementById('inventarioSinResultados').hidden =
-      filtrados.length > 0;
+    const sinResultados = obtener(
+      'inventarioSinResultados'
+    );
+
+    if (sinResultados) {
+      sinResultados.hidden = filtrados.length > 0;
+    }
 
     const desde = filtrados.length ? inicio + 1 : 0;
-    const hasta = Math.min(inicio + porPagina, filtrados.length);
 
-    textoPagina.textContent =
-      `Mostrando ${desde}–${hasta} de ${filtrados.length} registros`;
+    const hasta = Math.min(
+      inicio + porPagina,
+      filtrados.length
+    );
 
-    // Crea los controles de paginación.
+    escribir(
+      'inventarioPaginacionTexto',
+      `Mostrando ${desde}–${hasta} de ${filtrados.length} registros`
+    );
+
+    renderizarPaginacion(totalPaginas);
+    actualizarIconos();
+  }
+
+  // ==========================================
+  // PAGINACIÓN
+  // ==========================================
+
+  function renderizarPaginacion(totalPaginas) {
+    if (!botonesPagina) return;
+
     botonesPagina.innerHTML = '';
 
-    function agregarBoton(texto, pagina, deshabilitado, activo = false) {
+    function agregarBoton(
+      texto,
+      pagina,
+      deshabilitado,
+      activo = false
+    ) {
       const boton = document.createElement('button');
+
       boton.type = 'button';
       boton.textContent = texto;
       boton.disabled = deshabilitado;
       boton.className = activo ? 'activo' : '';
+
       boton.addEventListener('click', () => {
         paginaActual = pagina;
         renderizarInventario();
       });
+
       botonesPagina.appendChild(boton);
     }
 
-    agregarBoton('‹', paginaActual - 1, paginaActual === 1);
+    agregarBoton(
+      '‹',
+      paginaActual - 1,
+      paginaActual === 1
+    );
 
-    for (let numero = 1; numero <= totalPaginas; numero++) {
+    for (
+      let numero = 1;
+      numero <= totalPaginas;
+      numero++
+    ) {
       agregarBoton(
         String(numero),
         numero,
@@ -233,18 +462,252 @@ document.addEventListener('DOMContentLoaded', () => {
       paginaActual + 1,
       paginaActual === totalPaginas
     );
-
-    window.lucide?.createIcons();
   }
 
-  // Cambia el contenido según la pestaña seleccionada.
-  const pestanas = document.querySelectorAll('.inventario__pestana');
+  // ==========================================
+  // ALERTAS DE INVENTARIO
+  // ==========================================
+
+  function renderizarAlertas() {
+    const productosBajos = productos.filter(
+      p => p.estado === 'bajo'
+    );
+
+    const crearAlerta = producto => {
+      const existencia =
+        `${formatearNumero(producto.stockActual)} ${producto.unidad}`;
+
+      const minimo =
+        `${formatearNumero(producto.stockMinimo)} ${producto.unidad}`;
+
+      return `
+        <article class="inventario__alerta">
+          <i data-lucide="alert-triangle"></i>
+
+          <div>
+            <strong>${escapar(producto.nombre)}</strong>
+            <small>Disponible: ${escapar(existencia)}</small>
+            <small>Stock mínimo: ${escapar(minimo)}</small>
+          </div>
+        </article>
+      `;
+    };
+
+    if (listaAlertas) {
+      listaAlertas.innerHTML = productosBajos.length
+        ? productosBajos.map(crearAlerta).join('')
+        : '<p>No hay productos con stock bajo.</p>';
+    }
+
+    if (alertasLaterales) {
+      alertasLaterales.innerHTML = productosBajos.length
+        ? productosBajos.slice(0, 3).map(crearAlerta).join('')
+        : '<p>No hay alertas pendientes.</p>';
+    }
+
+    actualizarIconos();
+  }
+
+  // ==========================================
+  // FECHAS DE MOVIMIENTOS
+  // ==========================================
+
+  const zonaHoraria = 'America/Bogota';
+
+  const formatoDia = new Intl.DateTimeFormat('en-CA', {
+    timeZone: zonaHoraria,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+
+  const formatoFecha = new Intl.DateTimeFormat('es-CO', {
+    timeZone: zonaHoraria,
+    dateStyle: 'short',
+    timeStyle: 'short'
+  });
+
+  function fechaValida(valor) {
+    if (!valor) return null;
+
+    const fecha = new Date(valor);
+
+    return Number.isNaN(fecha.getTime())
+      ? null
+      : fecha;
+  }
+
+  function diaColombia(fecha) {
+    return formatoDia.format(fecha);
+  }
+
+  // ==========================================
+  // INDICADOR MOVIMIENTOS DE HOY
+  // ==========================================
+
+  function actualizarMovimientosHoy() {
+    const hoy = diaColombia(new Date());
+
+    const cantidad = movimientos.filter(movimiento => {
+      const fecha = fechaValida(
+        movimiento.fecha_movimiento
+      );
+
+      return fecha && diaColombia(fecha) === hoy;
+    }).length;
+
+    escribir(
+      'totalMovimientos',
+      `${cantidad} registros`
+    );
+  }
+
+  // ==========================================
+  // MOSTRAR MOVIMIENTOS DE MYSQL
+  // ==========================================
+
+  function renderizarMovimientos() {
+    if (!tablaMovimientos) return;
+
+    if (!movimientos.length) {
+      tablaMovimientos.innerHTML = `
+        <tr>
+          <td colspan="5">
+            No hay movimientos registrados.
+          </td>
+        </tr>
+      `;
+
+      escribir(
+        'mensajeMovimientos',
+        'No hay movimientos registrados.'
+      );
+
+      return;
+    }
+
+    tablaMovimientos.innerHTML = movimientos.map(
+      movimiento => {
+        const fecha = fechaValida(
+          movimiento.fecha_movimiento
+        );
+
+        const fechaTexto = fecha
+          ? formatoFecha.format(fecha)
+          : 'Sin fecha';
+
+        const tipo = String(
+          movimiento.tipo_movimiento || ''
+        ).toUpperCase();
+
+        const signo = tipo === 'ENTRADA'
+          ? '+'
+          : tipo === 'SALIDA' ? '−' : '';
+
+        const tipoTexto = {
+          ENTRADA: 'Entrada',
+          SALIDA: 'Salida',
+          AJUSTE: 'Ajuste'
+        }[tipo] || tipo || 'Sin tipo';
+
+        const cantidad =
+          `${signo}${formatearNumero(movimiento.cantidad ?? 0)}`;
+
+        const responsable =
+          movimiento.responsable || 'No registrado';
+
+        return `
+          <tr>
+            <td>${escapar(fechaTexto)}</td>
+            <td>
+              ${escapar(
+                movimiento.producto || 'Producto sin nombre'
+              )}
+            </td>
+            <td>${escapar(tipoTexto)}</td>
+            <td>
+              <strong>${escapar(cantidad)}</strong>
+            </td>
+            <td>${escapar(responsable)}</td>
+          </tr>
+        `;
+      }
+    ).join('');
+
+    escribir('mensajeMovimientos', '');
+  }
+
+  // ==========================================
+  // CARGAR MOVIMIENTOS DESDE MYSQL
+  // ==========================================
+
+  async function cargarMovimientos() {
+    escribir('totalMovimientos', 'Cargando...');
+
+    escribir(
+      'mensajeMovimientos',
+      'Consultando movimientos...'
+    );
+
+    try {
+      movimientos = await consultar('movimientos');
+
+      renderizarMovimientos();
+      actualizarMovimientosHoy();
+
+      console.log(
+        'Movimientos cargados desde MySQL:',
+        movimientos.length
+      );
+
+    } catch (error) {
+      console.error(
+        'No fue posible consultar movimientos:',
+        error
+      );
+
+      movimientos = [];
+
+      if (tablaMovimientos) {
+        tablaMovimientos.innerHTML = `
+          <tr>
+            <td colspan="5">
+              No fue posible cargar los movimientos.
+            </td>
+          </tr>
+        `;
+      }
+
+      escribir(
+        'mensajeMovimientos',
+        'No fue posible conectar con la API de movimientos.'
+      );
+
+      escribir(
+        'totalMovimientos',
+        'Sin conexión'
+      );
+    }
+  }
+
+  // ==========================================
+  // PESTAÑAS
+  // ==========================================
+
+  const pestanas = document.querySelectorAll(
+    '.inventario__pestana'
+  );
 
   function cambiarPestana(nombre) {
     pestanas.forEach(boton => {
       const activa = boton.dataset.tab === nombre;
+
       boton.classList.toggle('activa', activa);
-      boton.setAttribute('aria-selected', String(activa));
+
+      boton.setAttribute(
+        'aria-selected',
+        String(activa)
+      );
     });
 
     document.querySelectorAll('.inventario__panel')
@@ -256,51 +719,40 @@ document.addEventListener('DOMContentLoaded', () => {
   pestanas.forEach(boton => {
     boton.addEventListener('click', () => {
       cambiarPestana(boton.dataset.tab);
+
+      if (boton.dataset.tab === 'movimientos') {
+        cargarMovimientos();
+      }
     });
   });
 
-  document.getElementById('verTodasAlertas')
-    ?.addEventListener('click', () => cambiarPestana('alertas'));
+  obtener('verTodasAlertas')
+    ?.addEventListener('click', () => {
+      cambiarPestana('alertas');
+    });
 
-  // Muestra los movimientos de ejemplo.
-  const tablaMovimientos = document.getElementById('tablaMovimientos');
+  // ==========================================
+  // EVENTOS DE FILTROS
+  // ==========================================
 
-  tablaMovimientos.innerHTML = movimientos.map(movimiento => `
-    <tr>
-      <td>${escapar(movimiento.fecha)}</td>
-      <td>${escapar(movimiento.producto)}</td>
-      <td>${escapar(movimiento.tipo)}</td>
-      <td><strong>${escapar(movimiento.cantidad)}</strong></td>
-      <td>${escapar(movimiento.responsable)}</td>
-    </tr>
-  `).join('');
+  [buscador, filtroTipo, filtroEstado]
+    .filter(Boolean)
+    .forEach(control => {
+      control.addEventListener(
+        control === buscador ? 'input' : 'change',
+        () => {
+          paginaActual = 1;
+          renderizarInventario();
+        }
+      );
+    });
 
-  // Muestra las alertas de los productos de ejemplo.
-  const listaAlertas = document.getElementById('listaAlertas');
-  const productosBajos = productos.filter(p => p.estado === 'bajo');
+  // ==========================================
+  // INICIALIZACIÓN
+  // ==========================================
 
-  listaAlertas.innerHTML = productosBajos.map(producto => `
-    <article class="inventario__alerta">
-      <i data-lucide="alert-triangle"></i>
-      <div>
-        <strong>${escapar(producto.nombre)}</strong>
-        <small>Disponible: ${escapar(producto.existencia)}</small>
-        <small>Stock mínimo: ${escapar(producto.minimo)}</small>
-      </div>
-    </article>
-  `).join('');
-
-  // Actualiza la tabla cuando se modifican los filtros.
-  [buscador, filtroTipo, filtroEstado].forEach(control => {
-    control.addEventListener(
-      control === buscador ? 'input' : 'change',
-      () => {
-        paginaActual = 1;
-        renderizarInventario();
-      }
-    );
-  });
-
-  renderizarInventario();
   cambiarPestana('existencias');
+
+  cargarProductos();
+  cargarMovimientos();
 });

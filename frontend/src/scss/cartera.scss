@@ -240,3 +240,25 @@
     }
   }
 }
+
+
+/* =====================================
+   HISTORIAL DE ABONOS
+===================================== */
+
+.cartera__historial {
+  margin-top: 24px;
+}
+
+.cartera__historial .cartera__tabla {
+  width: 100%;
+}
+
+.cartera__historial .cartera__saldo {
+  font-weight: 700;
+  color: #166534;
+}
+
+.cartera__historial .cartera__cliente {
+  font-weight: 600;
+}

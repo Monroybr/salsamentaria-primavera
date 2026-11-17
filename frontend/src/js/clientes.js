@@ -1,5 +1,6 @@
-
 document.addEventListener('DOMContentLoaded', () => {
+  const API_URL = 'http://localhost:4000/api/clientes';
+  const POR_PAGINA = 5;
 
   const tabla = document.getElementById('tablaClientes');
   if (!tabla) return;
@@ -11,127 +12,45 @@ document.addEventListener('DOMContentLoaded', () => {
   const sinClientes = document.getElementById('sinClientes');
   const dialogo = document.getElementById('detalleCliente');
   const detalle = document.getElementById('contenidoDetalleCliente');
+  const cerrarDetalle = document.getElementById('cerrarDetalleCliente');
 
-  const CLAVE = 'salsamentaria_clientes';
-  const CLAVE_CARTERA = 'salsamentaria_cartera';
-  const POR_PAGINA = 5;
-
-  let paginaActual = 1;
+  let clientes = [];
   let filtrados = [];
-
-  // Clientes de demostración del mockup.
-  const ejemplos = [
-    {
-      id: 'CLI-001',
-      tipo: 'negocio',
-      nombre: 'Tienda El Portal',
-      contacto: 'Lucía Torres',
-      telefono: '310 442 1930',
-      documento: '',
-      correo: '',
-      saldoInicialDemo: 328400,
-      credito: true,
-      cupo: 500000,
-      plazo: 15
-    },
-    {
-      id: 'CLI-002',
-      tipo: 'negocio',
-      nombre: 'Panadería Central',
-      contacto: 'Jorge Ramírez',
-      telefono: '315 890 2241',
-      documento: '',
-      correo: '',
-      saldoInicialDemo: 176500,
-      credito: true,
-      cupo: 500000,
-      plazo: 15
-    },
-    {
-      id: 'CLI-003',
-      tipo: 'natural',
-      nombre: 'María Rodríguez',
-      contacto: 'María Rodríguez',
-      telefono: '300 514 7822',
-      documento: '',
-      correo: '',
-      saldoInicialDemo: 0,
-      credito: false,
-      cupo: 0,
-      plazo: 15
-    },
-    {
-      id: 'CLI-004',
-      tipo: 'negocio',
-      nombre: 'Mercado San José',
-      contacto: 'Andrés Gil',
-      telefono: '320 667 1045',
-      documento: '',
-      correo: '',
-      saldoInicialDemo: 92000,
-      credito: true,
-      cupo: 500000,
-      plazo: 15
-    }
-  ];
-
-  // Leer datos sin detener la página ante un error.
-  function leer(clave) {
-    try {
-      const datos = JSON.parse(localStorage.getItem(clave) || '[]');
-      return Array.isArray(datos) ? datos : [];
-    } catch {
-      return [];
-    }
-  }
+  let paginaActual = 1;
+  let cargando = false;
+  let mensajeError = '';
 
   function dinero(valor) {
     return '$' + Number(valor || 0).toLocaleString('es-CO', {
-      maximumFractionDigits: 0
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
     });
   }
 
-  function normalizar(texto) {
-    return String(texto || '')
+  function normalizar(valor) {
+    return String(valor ?? '')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
       .trim();
   }
 
-  // Se combinan los clientes creados con los de ejemplo.
-  function obtenerClientes() {
-    const guardados = leer(CLAVE);
-    const ids = new Set(guardados.map(c => c.id));
-
-    return [
-      ...guardados,
-      ...ejemplos.filter(c => !ids.has(c.id))
-    ];
+  function iniciales(nombre) {
+    return String(nombre || '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(parte => parte.charAt(0))
+      .join('')
+      .toUpperCase();
   }
 
-  // Consultar cuentas por cobrar del prototipo.
   function saldoCliente(cliente) {
-    const cuentas = leer(CLAVE_CARTERA);
+    return Math.max(0, Number(cliente.saldo_pendiente) || 0);
+  }
 
-    const relacionadas = cuentas.filter(c =>
-      c.clienteId === cliente.id ||
-      (!c.clienteId &&
-       normalizar(c.cliente) === normalizar(cliente.nombre))
-    );
-
-    const saldoCartera = relacionadas.reduce(
-      (suma, cuenta) =>
-        suma + Math.max(0, Number(cuenta.saldoPendiente) || 0),
-      0
-    );
-
-    // Los saldos del mockup son demostrativos.
-    // No se suman a la cartera para evitar duplicaciones.
-    return Math.max(
-      Number(cliente.saldoInicialDemo) || 0,
-      saldoCartera
-    );
+  function contactoCliente(cliente) {
+    return cliente.contacto || cliente.nombre || 'No registrado';
   }
 
   function crearCelda(texto, clase = '') {
@@ -141,27 +60,77 @@ document.addEventListener('DOMContentLoaded', () => {
     return td;
   }
 
-  // Iniciales del cliente para el avatar.
-  function iniciales(nombre) {
-    return String(nombre).trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map(parte => parte[0] || '')
-      .join('')
-      .toUpperCase();
+  async function cargarClientes() {
+    cargando = true;
+    mensajeError = '';
+    mostrarTabla();
+
+    try {
+      const respuesta = await fetch(API_URL, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json'
+        },
+        cache: 'no-store'
+      });
+
+      if (!respuesta.ok) {
+        throw new Error(
+          `Error HTTP ${respuesta.status} al consultar clientes`
+        );
+      }
+
+      const datos = await respuesta.json();
+
+      if (!Array.isArray(datos)) {
+        throw new Error('La API no devolvió una lista de clientes.');
+      }
+
+      clientes = datos;
+    } catch (error) {
+      console.error('Error al cargar clientes:', error);
+      clientes = [];
+      mensajeError =
+        'No fue posible consultar los clientes. Verifica que el servidor esté funcionando.';
+    } finally {
+      cargando = false;
+      filtrar();
+    }
   }
 
   function mostrarTabla() {
     tabla.replaceChildren();
+    paginacion.replaceChildren();
+
+    if (cargando) {
+      sinClientes.hidden = false;
+      sinClientes.textContent = 'Cargando clientes...';
+      textoPagina.textContent = '';
+      return;
+    }
+
+    if (mensajeError) {
+      sinClientes.hidden = false;
+      sinClientes.textContent = mensajeError;
+      textoPagina.textContent = '';
+      return;
+    }
 
     const total = filtrados.length;
     const paginas = Math.ceil(total / POR_PAGINA);
-    const inicio = (paginaActual - 1) * POR_PAGINA;
 
-    filtrados.slice(inicio, inicio + POR_PAGINA).forEach(cliente => {
+    paginaActual = Math.min(
+      Math.max(1, paginaActual),
+      Math.max(1, paginas)
+    );
+
+    const inicio = (paginaActual - 1) * POR_PAGINA;
+    const visibles = filtrados.slice(inicio, inicio + POR_PAGINA);
+
+    visibles.forEach(cliente => {
       const fila = document.createElement('tr');
 
-      // Cliente e iniciales.
+      // Nombre e iniciales.
       const tdNombre = document.createElement('td');
       const identidad = document.createElement('div');
       identidad.className = 'clientes__identidad';
@@ -171,18 +140,27 @@ document.addEventListener('DOMContentLoaded', () => {
       avatar.textContent = iniciales(cliente.nombre);
 
       const nombre = document.createElement('strong');
-      nombre.textContent = cliente.nombre;
+      nombre.textContent = cliente.nombre || 'Sin nombre';
 
       identidad.append(avatar, nombre);
       tdNombre.appendChild(identidad);
       fila.appendChild(tdNombre);
 
-      fila.appendChild(crearCelda(cliente.contacto));
+      // Contacto y teléfono.
       fila.appendChild(
-        crearCelda(cliente.telefono, 'clientes__telefono')
+        crearCelda(contactoCliente(cliente))
       );
 
+      fila.appendChild(
+        crearCelda(
+          cliente.telefono || 'No registrado',
+          'clientes__telefono'
+        )
+      );
+
+      // Saldo pendiente.
       const saldo = saldoCliente(cliente);
+
       fila.appendChild(
         crearCelda(dinero(saldo), 'clientes__saldo')
       );
@@ -201,41 +179,64 @@ document.addEventListener('DOMContentLoaded', () => {
       tdEstado.appendChild(estado);
       fila.appendChild(tdEstado);
 
-      // Botón de acciones.
+      // Acciones.
       const tdAcciones = document.createElement('td');
       const boton = document.createElement('button');
 
       boton.type = 'button';
       boton.className = 'clientes__accion';
       boton.textContent = '•••';
+
       boton.setAttribute(
         'aria-label',
         `Consultar cliente ${cliente.nombre}`
       );
 
-      boton.addEventListener('click', () => mostrarDetalle(cliente));
+      boton.addEventListener('click', () => {
+        mostrarDetalle(cliente);
+      });
 
       tdAcciones.appendChild(boton);
       fila.appendChild(tdAcciones);
+
       tabla.appendChild(fila);
     });
 
     sinClientes.hidden = total !== 0;
 
-    textoPagina.textContent = total
-      ? `Mostrando ${inicio + 1}–${Math.min(inicio + POR_PAGINA, total)} de ${total} registros`
+    if (total === 0) {
+      sinClientes.textContent =
+        'No se encontraron clientes con los filtros seleccionados.';
+    }
+
+    textoPagina.textContent = total > 0
+      ? `Mostrando ${inicio + 1}–${Math.min(
+          inicio + POR_PAGINA,
+          total
+        )} de ${total} registros`
       : 'Mostrando 0 registros';
 
-    paginacion.replaceChildren();
-
     if (paginas > 1) {
-      crearBoton('‹', paginaActual - 1, paginaActual === 1);
+      crearBoton(
+        '‹',
+        paginaActual - 1,
+        paginaActual === 1
+      );
 
-      for (let n = 1; n <= paginas; n++) {
-        crearBoton(String(n), n, false, n === paginaActual);
+      for (let numero = 1; numero <= paginas; numero++) {
+        crearBoton(
+          String(numero),
+          numero,
+          false,
+          numero === paginaActual
+        );
       }
 
-      crearBoton('›', paginaActual + 1, paginaActual === paginas);
+      crearBoton(
+        '›',
+        paginaActual + 1,
+        paginaActual === paginas
+      );
     }
   }
 
@@ -246,7 +247,10 @@ document.addEventListener('DOMContentLoaded', () => {
     boton.textContent = texto;
     boton.disabled = deshabilitado;
 
-    if (activo) boton.classList.add('activo');
+    if (activo) {
+      boton.classList.add('activo');
+      boton.setAttribute('aria-current', 'page');
+    }
 
     boton.addEventListener('click', () => {
       paginaActual = pagina;
@@ -256,8 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
     paginacion.appendChild(boton);
   }
 
-  // Ventana para consultar y editar.
   function mostrarDetalle(cliente) {
+    if (!dialogo || !detalle) return;
+
     detalle.replaceChildren();
 
     function agregarCampo(etiqueta, valor) {
@@ -265,49 +270,97 @@ document.addEventListener('DOMContentLoaded', () => {
       const fuerte = document.createElement('strong');
 
       fuerte.textContent = etiqueta + ': ';
+
       p.append(
         fuerte,
-        document.createTextNode(String(valor || 'No registrado'))
+        document.createTextNode(
+          valor === null ||
+          valor === undefined ||
+          valor === ''
+            ? 'No registrado'
+            : String(valor)
+        )
       );
 
       detalle.appendChild(p);
     }
 
     agregarCampo('Cliente', cliente.nombre);
-    agregarCampo('Tipo', cliente.tipo === 'natural'
-      ? 'Persona natural'
-      : 'Negocio o empresa');
-    agregarCampo('Contacto', cliente.contacto);
-    agregarCampo('Documento', cliente.documento);
+
+    agregarCampo(
+      'Tipo',
+      cliente.tipo_cliente === 'negocio'
+        ? 'Negocio o empresa'
+        : 'Persona natural'
+    );
+
+    agregarCampo('Contacto', contactoCliente(cliente));
+    agregarCampo('Tipo de documento', cliente.tipo_documento);
+    agregarCampo('Número de documento', cliente.numero_documento);
     agregarCampo('Teléfono', cliente.telefono);
     agregarCampo('Correo', cliente.correo);
     agregarCampo('Dirección', cliente.direccion);
     agregarCampo('Ciudad', cliente.ciudad);
     agregarCampo('Barrio', cliente.barrio);
-    agregarCampo('Saldo pendiente', dinero(saldoCliente(cliente)));
-    agregarCampo('Crédito', cliente.credito ? 'Habilitado' : 'Deshabilitado');
 
+    agregarCampo(
+      'Saldo pendiente',
+      dinero(saldoCliente(cliente))
+    );
+
+    agregarCampo(
+      'Crédito',
+      Number(cliente.credito_habilitado) === 1
+        ? 'Habilitado'
+        : 'Deshabilitado'
+    );
+
+    agregarCampo(
+      'Cupo de crédito',
+      dinero(cliente.cupo_credito)
+    );
+
+    agregarCampo(
+      'Plazo de crédito',
+      `${Number(cliente.plazo_credito) || 15} días`
+    );
+
+    agregarCampo('Notas', cliente.notas);
+
+    // El formulario de edición se conectará en el siguiente paso.
     const enlace = document.createElement('a');
-    enlace.href = `nuevo-cliente.html?id=${encodeURIComponent(cliente.id)}`;
+
+    enlace.href =
+      `nuevo-cliente.html?id=${encodeURIComponent(cliente.id_cliente)}`;
+
     enlace.className =
       'clientes__boton-principal clientes__dialogo-editar';
+
     enlace.textContent = 'Editar cliente';
 
     detalle.appendChild(enlace);
-    dialogo.showModal();
+
+    if (typeof dialogo.showModal === 'function') {
+      dialogo.showModal();
+    }
   }
 
-  // Buscar y filtrar por saldo.
   function filtrar() {
-    const texto = normalizar(buscador.value);
-    const estado = filtro.value;
+    if (cargando || mensajeError) {
+      mostrarTabla();
+      return;
+    }
 
-    filtrados = obtenerClientes().filter(cliente => {
+    const texto = normalizar(buscador?.value);
+    const estado = filtro?.value || 'todos';
+
+    filtrados = clientes.filter(cliente => {
       const coincideTexto = [
         cliente.nombre,
         cliente.contacto,
         cliente.telefono,
-        cliente.documento
+        cliente.numero_documento,
+        cliente.correo
       ].some(valor => normalizar(valor).includes(texto));
 
       const saldo = saldoCliente(cliente);
@@ -324,13 +377,29 @@ document.addEventListener('DOMContentLoaded', () => {
     mostrarTabla();
   }
 
-  buscador.addEventListener('input', filtrar);
-  filtro.addEventListener('change', filtrar);
+  buscador?.addEventListener('input', filtrar);
+  filtro?.addEventListener('change', filtrar);
 
-  document.getElementById('cerrarDetalleCliente')
-    .addEventListener('click', () => dialogo.close());
+  cerrarDetalle?.addEventListener('click', () => {
+    dialogo.close();
+  });
 
-  filtrar();
+  dialogo?.addEventListener('click', evento => {
+    if (evento.target === dialogo) {
+      dialogo.close();
+    }
+  });
 
-  if (window.lucide) window.lucide.createIcons();
+  // Actualizar los datos cuando se regrese a esta pestaña.
+  window.addEventListener('focus', () => {
+    if (!document.hidden) {
+      cargarClientes();
+    }
+  });
+
+  cargarClientes();
+
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
 });

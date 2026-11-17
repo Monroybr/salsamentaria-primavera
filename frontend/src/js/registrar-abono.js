@@ -1,5 +1,5 @@
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
   const datos = window.CarteraDatos;
   const formulario = document.getElementById('formRegistrarAbono');
@@ -21,14 +21,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const parametros = new URLSearchParams(window.location.search);
   const cuentaInicial = parametros.get('cuenta');
 
-  const cuentas = datos.obtenerPendientes();
-
-  document.getElementById('numeroComprobante').textContent =
-    datos.siguienteComprobante();
+  let cuentas = [];
+  let guardando = false;
 
   fechaInput.value = datos.fechaLocal();
 
-  // Crear una opción de selección.
+  const comprobante = document.getElementById('numeroComprobante');
+
+  if (comprobante) {
+    comprobante.textContent = 'Se asignará al guardar';
+  }
+
   function agregarOpcion(select, valor, texto) {
     const opcion = document.createElement('option');
     opcion.value = valor;
@@ -36,7 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
     select.appendChild(opcion);
   }
 
-  // Agrupar cuentas por cliente.
+  function mostrarMensaje(texto) {
+    mensaje.textContent = texto;
+    mensaje.hidden = false;
+  }
+
+  function ocultarMensaje() {
+    mensaje.hidden = true;
+  }
+
   function cargarClientes() {
     clienteSelect.replaceChildren();
 
@@ -55,9 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
       agregarOpcion(clienteSelect, clave, nombre);
     });
 
-    // Si se abrió desde "Abonar" en la tabla,
-    // seleccionar automáticamente ese cliente.
-    const inicial = cuentas.find(c => c.id === cuentaInicial);
+    const inicial = cuentas.find(
+      cuenta => cuenta.id === cuentaInicial
+    );
 
     if (inicial) {
       clienteSelect.value = inicial.clienteId ||
@@ -65,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Mostrar las facturas pendientes del cliente.
   function cargarFacturas() {
     facturaSelect.replaceChildren();
 
@@ -84,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
       );
     });
 
-    if (relacionadas.some(c => c.id === cuentaInicial)) {
+    if (relacionadas.some(cuenta => cuenta.id === cuentaInicial)) {
       facturaSelect.value = cuentaInicial;
     }
 
@@ -92,12 +102,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function cuentaSeleccionada() {
-    return cuentas.find(c => c.id === facturaSelect.value);
+    return cuentas.find(
+      cuenta => cuenta.id === facturaSelect.value
+    );
   }
 
   function actualizarResumen() {
     const cuenta = cuentaSeleccionada();
-    const saldo = cuenta ? Number(cuenta.saldoPendiente) : 0;
+
+    const saldo = cuenta
+      ? Number(cuenta.saldoPendiente)
+      : 0;
 
     const valor = Number(valorInput.value) || 0;
     const nuevoSaldo = Math.max(0, saldo - valor);
@@ -120,16 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('resumenNuevoSaldo').textContent =
       datos.dinero(nuevoSaldo);
 
-    // No permitir registrar sin una cuenta válida.
-    guardar.disabled = !cuenta;
+    guardar.disabled = guardando || !cuenta;
   }
 
-  function mostrarMensaje(texto) {
-    mensaje.textContent = texto;
-    mensaje.hidden = false;
-  }
-
-  // Botones de abono rápido.
   document.querySelectorAll('.registrar-abono__rapidos button')
     .forEach(boton => {
 
@@ -150,8 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
   clienteSelect.addEventListener('change', () => {
-    // Evitar conservar un valor superior al saldo
-    // de otro cliente.
     valorInput.value = '';
     cargarFacturas();
   });
@@ -163,10 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   valorInput.addEventListener('input', actualizarResumen);
 
-  // Registrar el pago.
-  formulario.addEventListener('submit', evento => {
+  formulario.addEventListener('submit', async evento => {
     evento.preventDefault();
-    mensaje.hidden = true;
+    ocultarMensaje();
+
+    if (guardando) return;
 
     const cuenta = cuentaSeleccionada();
 
@@ -178,8 +185,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const valor = Number(valorInput.value);
     const saldo = Number(cuenta.saldoPendiente);
 
-    if (!Number.isInteger(valor) || valor <= 0) {
-      mostrarMensaje('Ingresa un abono válido mayor que cero.');
+    if (
+      !Number.isFinite(valor) ||
+      valor <= 0 ||
+      !Number.isInteger(Math.round(valor * 100)) ||
+      Math.abs(valor * 100 - Math.round(valor * 100)) > 0.000001
+    ) {
+      mostrarMensaje(
+        'Ingresa un abono positivo con máximo dos decimales.'
+      );
       return;
     }
 
@@ -195,11 +209,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Evitar que se guarde dos veces.
+    guardando = true;
     guardar.disabled = true;
 
+    const textoOriginal = guardar.textContent;
+    guardar.textContent = 'Guardando...';
+
     try {
-      const resultado = datos.registrarAbono({
+      const resultado = await datos.registrarAbono({
         cuentaId: cuenta.id,
         valor,
         medioPago: medioInput.value,
@@ -209,26 +226,49 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       alert(
-        `Abono ${resultado.abono.id} registrado correctamente.\n` +
+        `Abono registrado correctamente.\n` +
+        `Comprobante: AB-${String(resultado.abono.id).padStart(4, '0')}\n` +
         `Nuevo saldo: ${datos.dinero(resultado.cuenta.saldoPendiente)}`
       );
 
       window.location.href = 'cartera.html';
 
     } catch (error) {
-      guardar.disabled = false;
-      mostrarMensaje(error.message || 'No fue posible registrar el abono.');
+      mostrarMensaje(
+        error.message || 'No fue posible registrar el abono.'
+      );
+
+    } finally {
+      guardando = false;
+      guardar.textContent = textoOriginal;
+      actualizarResumen();
     }
   });
 
-  // Inicializar.
-  cargarClientes();
-  cargarFacturas();
+  try {
+    guardar.disabled = true;
 
-  if (!cuentas.length) {
-    mostrarMensaje('No existen cuentas con saldo pendiente.');
+    cuentas = await datos.obtenerPendientes();
+
+    cargarClientes();
+    cargarFacturas();
+
+    if (!cuentas.length) {
+      mostrarMensaje('No existen cuentas con saldo pendiente.');
+      guardar.disabled = true;
+    }
+
+  } catch (error) {
+    console.error('Error al cargar las cuentas:', error);
+
+    mostrarMensaje(
+      error.message || 'No fue posible cargar las cuentas.'
+    );
+
     guardar.disabled = true;
   }
 
-  if (window.lucide) window.lucide.createIcons();
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
 });

@@ -1,6 +1,16 @@
+/*
+ * REPORTES - SALSAMENTARIA PRIMAVERA
+ * Integración con Node.js, Express y MySQL.
+ * Consulta de ventas, indicadores y productos.
+ */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const graficaElemento = document.getElementById('graficaVentasReporte');
+
+  const API = 'http://localhost:4000/api/reportes';
+
+  const graficaElemento =
+    document.getElementById('graficaVentasReporte');
+
   if (!graficaElemento) return;
 
   const periodo = document.getElementById('periodoReporte');
@@ -14,74 +24,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const ingresosTexto = document.getElementById('ingresosReporte');
   const unidadesTexto = document.getElementById('unidadesReporte');
   const ticketTexto = document.getElementById('ticketReporte');
-  const listaProductos = document.getElementById('listaProductosReporte');
-  const sinProductos = document.getElementById('sinProductosReporte');
+
+  const listaProductos =
+    document.getElementById('listaProductosReporte');
+
+  const sinProductos =
+    document.getElementById('sinProductosReporte');
+
+  const descripcionGrafica =
+    document.getElementById('descripcionGrafica');
+
+  const variacionIngresos =
+    document.getElementById('variacionIngresos');
+
+  const variacionUnidades =
+    document.getElementById('variacionUnidades');
+
+  const variacionTicket =
+    document.getElementById('variacionTicket');
 
   let grafica = null;
   let reporteActual = null;
+  let consultando = false;
 
-  /*
-   * DATOS DE DEMOSTRACIÓN
-   *
-   * Los valores corresponden a marzo de 2025
-   * y reproducen los indicadores del mockup.
-   *
-   * Posteriormente se reemplazarán por consultas
-   * a las ventas y detalles de venta de MySQL.
-   */
-  const DEMO = {
-    desde: '2025-03-01',
-    hasta: '2025-03-31',
+  // ==========================================
+  // FORMATO DE VALORES
+  // ==========================================
 
-    ingresos: 28450800,
-    unidades: 2846,
-    ticket: 54320,
-
-    variaciones: {
-      ingresos: '+8,4% período anterior',
-      unidades: '+6,2% período anterior',
-      ticket: '+1,8% período anterior'
-    },
-
-    semanas: [
-      { nombre: 'Semana 1', ingresos: 5700000 },
-      { nombre: 'Semana 2', ingresos: 6900000 },
-      { nombre: 'Semana 3', ingresos: 6300000 },
-      { nombre: 'Semana 4', ingresos: 9550800 }
-    ],
-
-    productos: [
-      {
-        nombre: 'Jamón de cerdo premium',
-        unidades: 248,
-        ingresos: 5840000
-      },
-      {
-        nombre: 'Queso campesino',
-        unidades: 196,
-        ingresos: 4210000
-      },
-      {
-        nombre: 'Salchicha ranchera',
-        unidades: 174,
-        ingresos: 3780000
-      },
-      {
-        nombre: 'Chorizo santarrosano',
-        unidades: 143,
-        ingresos: 2950000
-      }
-    ]
-  };
-
-  // Formato colombiano de moneda.
-  function dinero(numero) {
-    return '$' + Math.round(Number(numero) || 0)
-      .toLocaleString('es-CO');
+  function dinero(valor) {
+    return '$' + Number(valor || 0).toLocaleString('es-CO', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
   }
 
-  function numero(numero) {
-    return Number(numero || 0).toLocaleString('es-CO');
+  function numero(valor) {
+    return Number(valor || 0).toLocaleString('es-CO');
   }
 
   function fechaLocal(fecha) {
@@ -92,29 +70,36 @@ document.addEventListener('DOMContentLoaded', () => {
     ].join('-');
   }
 
-  function fechaDesdeTexto(valor) {
-    const partes = String(valor).split('-').map(Number);
-    return new Date(partes[0], partes[1] - 1, partes[2]);
-  }
-
   function sumarDias(fecha, dias) {
     const copia = new Date(fecha);
     copia.setDate(copia.getDate() + dias);
     return copia;
   }
 
+  function fechaDesdeTexto(valor) {
+    const [anio, mes, dia] = String(valor)
+      .split('-')
+      .map(Number);
+
+    return new Date(anio, mes - 1, dia);
+  }
+
   function mostrarMensaje(texto) {
+    if (!mensaje) return;
+
     mensaje.textContent = texto;
     mensaje.hidden = false;
   }
 
   function ocultarMensaje() {
+    if (!mensaje) return;
+
     mensaje.textContent = '';
     mensaje.hidden = true;
   }
 
   // ==========================================
-  // PERÍODOS
+  // SELECCIÓN DE PERÍODOS
   // ==========================================
 
   function actualizarFechas() {
@@ -154,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Este mes.
     desde.value = fechaLocal(
       new Date(hoy.getFullYear(), hoy.getMonth(), 1)
     );
@@ -164,40 +150,97 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // CONSULTAR DATOS DEL PROTOTIPO
+  // CONSULTAR API DE REPORTES
   // ==========================================
 
-  function obtenerReporte(inicio, fin) {
-    // Solo hay datos de demostración para marzo de 2025.
-    // La selección completa de ese mes muestra el mockup.
-    if (inicio === DEMO.desde && fin === DEMO.hasta) {
-      return {
-        ...DEMO,
-        esDemo: true
-      };
+  async function obtenerReporte(inicio, fin) {
+    const parametros = new URLSearchParams({
+      desde: inicio,
+      hasta: fin
+    });
+
+    let respuesta;
+
+    try {
+      respuesta = await fetch(
+        `${API}?${parametros.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json'
+          }
+        }
+      );
+    } catch {
+      throw new Error(
+        'No se pudo conectar con el backend. ' +
+        'Verifica que esté funcionando en el puerto 4000.'
+      );
     }
 
-    // Sin conexión a la base de datos, no inventar
-    // resultados para otros períodos.
+    let resultado;
+
+    try {
+      resultado = await respuesta.json();
+    } catch {
+      throw new Error(
+        'El servidor devolvió una respuesta no válida.'
+      );
+    }
+
+    if (!respuesta.ok) {
+      throw new Error(
+        resultado.mensaje ||
+        'No fue posible consultar el reporte.'
+      );
+    }
+
+    if (
+      !resultado.indicadores ||
+      !Array.isArray(resultado.ventasSemanales) ||
+      !Array.isArray(resultado.productosMasVendidos)
+    ) {
+      throw new Error(
+        'La API devolvió datos incompletos.'
+      );
+    }
+
     return {
-      desde: inicio,
-      hasta: fin,
-      ingresos: 0,
-      unidades: 0,
-      ticket: 0,
-      variaciones: {
-        ingresos: 'Sin datos comparativos',
-        unidades: 'Sin datos comparativos',
-        ticket: 'Sin datos comparativos'
+      desde: resultado.periodo?.desde || inicio,
+      hasta: resultado.periodo?.hasta || fin,
+
+      indicadores: {
+        totalVentas:
+          Number(resultado.indicadores.totalVentas || 0),
+
+        ventasTotales:
+          Number(resultado.indicadores.ventasTotales || 0),
+
+        unidadesVendidas:
+          Number(resultado.indicadores.unidadesVendidas || 0),
+
+        ticketPromedio:
+          Number(resultado.indicadores.ticketPromedio || 0),
+
+        ventasContado:
+          Number(resultado.indicadores.ventasContado || 0),
+
+        ventasCredito:
+          Number(resultado.indicadores.ventasCredito || 0)
       },
-      semanas: [
-        { nombre: 'Semana 1', ingresos: 0 },
-        { nombre: 'Semana 2', ingresos: 0 },
-        { nombre: 'Semana 3', ingresos: 0 },
-        { nombre: 'Semana 4', ingresos: 0 }
-      ],
-      productos: [],
-      esDemo: false
+
+      semanas: resultado.ventasSemanales.map(item => ({
+        fecha: item.semana,
+        cantidadVentas: Number(item.cantidadVentas || 0),
+        ingresos: Number(item.total || 0)
+      })),
+
+      productos: resultado.productosMasVendidos.map(item => ({
+        id: item.id,
+        nombre: item.nombre,
+        unidades: Number(item.unidades || 0),
+        ingresos: Number(item.ingresos || 0)
+      }))
     };
   }
 
@@ -206,22 +249,35 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
 
   function actualizarIndicadores(reporte) {
-    ingresosTexto.textContent = dinero(reporte.ingresos);
-    unidadesTexto.textContent = numero(reporte.unidades);
-    ticketTexto.textContent = dinero(reporte.ticket);
+    const datos = reporte.indicadores;
 
-    document.getElementById('variacionIngresos').textContent =
-      reporte.variaciones.ingresos;
+    ingresosTexto.textContent =
+      dinero(datos.ventasTotales);
 
-    document.getElementById('variacionUnidades').textContent =
-      reporte.variaciones.unidades;
+    unidadesTexto.textContent =
+      numero(datos.unidadesVendidas);
 
-    document.getElementById('variacionTicket').textContent =
-      reporte.variaciones.ticket;
+    ticketTexto.textContent =
+      dinero(datos.ticketPromedio);
+
+    if (variacionIngresos) {
+      variacionIngresos.textContent =
+        `${numero(datos.totalVentas)} ventas registradas`;
+    }
+
+    if (variacionUnidades) {
+      variacionUnidades.textContent =
+        'Unidades vendidas en el período';
+    }
+
+    if (variacionTicket) {
+      variacionTicket.textContent =
+        'Promedio por venta registrada';
+    }
   }
 
   // ==========================================
-  // GRÁFICA DE VENTAS
+  // GRÁFICA DE VENTAS POR SEMANA
   // ==========================================
 
   function actualizarGrafica(reporte) {
@@ -232,10 +288,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (typeof Chart === 'undefined') {
       mostrarMensaje(
-        'No se pudo cargar la librería de gráficos. Revisa la conexión.'
+        'No se pudo cargar Chart.js. ' +
+        'Verifica tu conexión a Internet.'
       );
       return;
     }
+
+    const semanas = reporte.semanas;
+
+    const etiquetas = semanas.map(item => {
+      const fecha = fechaDesdeTexto(item.fecha);
+
+      return fecha.toLocaleDateString('es-CO', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    });
+
+    const valores = semanas.map(item => item.ingresos);
 
     const contexto = graficaElemento.getContext('2d');
 
@@ -243,11 +314,11 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'bar',
 
       data: {
-        labels: reporte.semanas.map(s => s.nombre),
+        labels: etiquetas,
 
         datasets: [{
-          label: 'Ingresos',
-          data: reporte.semanas.map(s => s.ingresos),
+          label: 'Ventas totales',
+          data: valores,
           backgroundColor: '#287b56',
           hoverBackgroundColor: '#155b3d',
           borderRadius: 4,
@@ -267,8 +338,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
           tooltip: {
             callbacks: {
+              title: elementos => {
+                if (!elementos.length) return '';
+
+                return 'Semana del ' +
+                  elementos[0].label;
+              },
+
               label: contexto =>
-                'Ingresos: ' + dinero(contexto.parsed.y)
+                'Ventas: ' + dinero(contexto.parsed.y)
             }
           }
         },
@@ -305,16 +383,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
             ticks: {
               color: '#7a8880',
+
               font: {
                 size: 10
               },
 
               callback: valor => {
-                if (valor === 0) return '$0';
-                return '$' + (valor / 1000000)
-                  .toLocaleString('es-CO', {
-                    maximumFractionDigits: 1
-                  }) + 'M';
+                const cantidad = Number(valor);
+
+                if (cantidad === 0) return '$0';
+
+                if (Math.abs(cantidad) >= 1000000) {
+                  return '$' +
+                    (cantidad / 1000000).toLocaleString(
+                      'es-CO',
+                      { maximumFractionDigits: 1 }
+                    ) + 'M';
+                }
+
+                if (Math.abs(cantidad) >= 1000) {
+                  return '$' +
+                    (cantidad / 1000).toLocaleString(
+                      'es-CO',
+                      { maximumFractionDigits: 1 }
+                    ) + ' mil';
+                }
+
+                return dinero(cantidad);
               }
             }
           }
@@ -322,11 +417,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    const descripcion = document.getElementById('descripcionGrafica');
-
-    descripcion.textContent = reporte.esDemo
-      ? 'Comportamiento durante marzo'
-      : `Período: ${reporte.desde} al ${reporte.hasta}`;
+    if (descripcionGrafica) {
+      descripcionGrafica.textContent =
+        `Período: ${reporte.desde} al ${reporte.hasta}`;
+    }
   }
 
   // ==========================================
@@ -336,72 +430,146 @@ document.addEventListener('DOMContentLoaded', () => {
   function actualizarProductos(reporte) {
     listaProductos.replaceChildren();
 
-    sinProductos.hidden = reporte.productos.length !== 0;
-
-    reporte.productos
+    const productos = reporte.productos
       .slice()
       .sort((a, b) => b.ingresos - a.ingresos)
-      .slice(0, 4)
-      .forEach((producto, indice) => {
+      .slice(0, 4);
 
-        const fila = document.createElement('div');
-        fila.className = 'reportes__producto';
+    sinProductos.hidden = productos.length > 0;
 
-        const posicion = document.createElement('span');
-        posicion.className = 'reportes__posicion';
-        posicion.textContent = indice + 1;
+    productos.forEach((producto, indice) => {
+      const fila = document.createElement('div');
+      fila.className = 'reportes__producto';
 
-        const informacion = document.createElement('div');
-        informacion.className = 'reportes__producto-info';
+      const posicion = document.createElement('span');
+      posicion.className = 'reportes__posicion';
+      posicion.textContent = indice + 1;
 
-        const nombre = document.createElement('strong');
-        nombre.textContent = producto.nombre;
+      const informacion = document.createElement('div');
+      informacion.className = 'reportes__producto-info';
 
-        const unidades = document.createElement('small');
-        unidades.textContent =
-          `${numero(producto.unidades)} unidades`;
+      const nombre = document.createElement('strong');
+      nombre.textContent = producto.nombre;
 
-        informacion.append(nombre, unidades);
+      const unidades = document.createElement('small');
+      unidades.textContent =
+        `${numero(producto.unidades)} unidades`;
 
-        const total = document.createElement('strong');
-        total.className = 'reportes__producto-total';
-        total.textContent = dinero(producto.ingresos);
+      informacion.append(nombre, unidades);
 
-        fila.append(posicion, informacion, total);
-        listaProductos.appendChild(fila);
-      });
+      const total = document.createElement('strong');
+      total.className = 'reportes__producto-total';
+      total.textContent = dinero(producto.ingresos);
+
+      fila.append(posicion, informacion, total);
+
+      listaProductos.appendChild(fila);
+    });
+  }
+
+  // ==========================================
+  // LIMPIAR INDICADORES ANTE ERRORES
+  // ==========================================
+
+  function limpiarReporte() {
+    ingresosTexto.textContent = '$0';
+    unidadesTexto.textContent = '0';
+    ticketTexto.textContent = '$0';
+
+    if (variacionIngresos) {
+      variacionIngresos.textContent = 'Sin datos';
+    }
+
+    if (variacionUnidades) {
+      variacionUnidades.textContent = 'Sin datos';
+    }
+
+    if (variacionTicket) {
+      variacionTicket.textContent = 'Sin datos';
+    }
+
+    listaProductos.replaceChildren();
+    sinProductos.hidden = false;
+
+    if (grafica) {
+      grafica.destroy();
+      grafica = null;
+    }
+
+    if (descripcionGrafica) {
+      descripcionGrafica.textContent =
+        'No hay información disponible';
+    }
   }
 
   // ==========================================
   // GENERAR REPORTE
   // ==========================================
 
-  function generarReporte() {
+  async function generarReporte() {
+    if (consultando) return;
+
     ocultarMensaje();
 
     if (!desde.value || !hasta.value) {
-      mostrarMensaje('Selecciona las fechas del reporte.');
+      mostrarMensaje(
+        'Selecciona las fechas del reporte.'
+      );
       return;
     }
 
     if (desde.value > hasta.value) {
       mostrarMensaje(
-        'La fecha inicial no puede ser posterior a la fecha final.'
+        'La fecha inicial no puede ser posterior a la final.'
       );
       return;
     }
 
-    reporteActual = obtenerReporte(desde.value, hasta.value);
+    consultando = true;
+    reporteActual = null;
 
-    actualizarIndicadores(reporteActual);
-    actualizarGrafica(reporteActual);
-    actualizarProductos(reporteActual);
+    generar.disabled = true;
+    descargar.disabled = true;
+    generar.textContent = 'Generando...';
 
-    if (!reporteActual.esDemo) {
-      mostrarMensaje(
-        'No hay datos de demostración para este período. ' +
-        'Los reportes reales estarán disponibles al integrar las ventas.'
+    try {
+      const reporte = await obtenerReporte(
+        desde.value,
+        hasta.value
       );
+
+      reporteActual = reporte;
+
+      actualizarIndicadores(reporte);
+      actualizarGrafica(reporte);
+      actualizarProductos(reporte);
+
+      if (reporte.indicadores.totalVentas === 0) {
+        mostrarMensaje(
+          'No se encontraron ventas registradas ' +
+          'en el período seleccionado.'
+        );
+      }
+
+    } catch (error) {
+      console.error(
+        'Error al generar el reporte:',
+        error
+      );
+
+      reporteActual = null;
+      limpiarReporte();
+
+      mostrarMensaje(
+        error.message ||
+        'No fue posible generar el reporte.'
+      );
+
+    } finally {
+      consultando = false;
+      generar.disabled = false;
+      descargar.disabled = !reporteActual;
+      generar.textContent = 'Generar reporte';
     }
   }
 
@@ -411,43 +579,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function descargarReporte() {
     if (!reporteActual) {
-      mostrarMensaje('Primero genera un reporte.');
+      mostrarMensaje(
+        'Primero genera un reporte.'
+      );
       return;
     }
 
-    // Proteger los valores al exportar a una hoja de cálculo.
+    const reporte = reporteActual;
+    const indicadores = reporte.indicadores;
+
+    // Proteger textos ante fórmulas de hojas de cálculo.
     function celda(valor) {
       let texto = String(valor ?? '');
 
-      // Evitar que Excel interprete textos como fórmulas.
-      if (/^[\s]*[=+\-@]/.test(texto)) {
+      if (/^\s*[=+\-@\t\r]/.test(texto)) {
         texto = "'" + texto;
       }
 
-      return '"' + texto.replace(/"/g, '""') + '"';
+      return '"' +
+        texto.replace(/"/g, '""') +
+        '"';
     }
 
     const filas = [
       ['Reporte de ventas - Salsamentaria Primavera'],
-      ['Desde', reporteActual.desde],
-      ['Hasta', reporteActual.hasta],
+      ['Desde', reporte.desde],
+      ['Hasta', reporte.hasta],
       [],
       ['Indicador', 'Valor'],
-      ['Ingresos totales', reporteActual.ingresos],
-      ['Unidades vendidas', reporteActual.unidades],
-      ['Ticket promedio', reporteActual.ticket],
+      ['Ventas totales', indicadores.ventasTotales],
+      ['Ventas registradas', indicadores.totalVentas],
+      ['Unidades vendidas', indicadores.unidadesVendidas],
+      ['Ticket promedio', indicadores.ticketPromedio],
+      ['Ventas de contado', indicadores.ventasContado],
+      ['Ventas a crédito', indicadores.ventasCredito],
       [],
-      ['Semana', 'Ingresos']
+      ['Semana de inicio', 'Cantidad de ventas', 'Valor total']
     ];
 
-    reporteActual.semanas.forEach(semana => {
-      filas.push([semana.nombre, semana.ingresos]);
+    reporte.semanas.forEach(semana => {
+      filas.push([
+        semana.fecha,
+        semana.cantidadVentas,
+        semana.ingresos
+      ]);
     });
 
     filas.push([]);
-    filas.push(['Producto', 'Unidades vendidas', 'Ingresos']);
+    filas.push([
+      'Producto',
+      'Unidades vendidas',
+      'Ventas generadas'
+    ]);
 
-    reporteActual.productos.forEach(producto => {
+    reporte.productos.forEach(producto => {
       filas.push([
         producto.nombre,
         producto.unidades,
@@ -455,11 +640,11 @@ document.addEventListener('DOMContentLoaded', () => {
       ]);
     });
 
-    // El punto y coma facilita la apertura en Excel
-    // con configuración regional colombiana.
-    const contenido = '\uFEFF' + filas
-      .map(fila => fila.map(celda).join(';'))
-      .join('\r\n');
+    // Separador compatible con Excel en español.
+    const contenido = '\uFEFF' +
+      filas
+        .map(fila => fila.map(celda).join(';'))
+        .join('\r\n');
 
     const archivo = new Blob([contenido], {
       type: 'text/csv;charset=utf-8;'
@@ -470,33 +655,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
     enlace.href = url;
     enlace.download =
-      `reporte_ventas_${reporteActual.desde}_${reporteActual.hasta}.csv`;
+      `reporte_ventas_${reporte.desde}_${reporte.hasta}.csv`;
 
     document.body.appendChild(enlace);
     enlace.click();
     enlace.remove();
 
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
   }
 
   // ==========================================
-  // EVENTOS E INICIALIZACIÓN
+  // EVENTOS
   // ==========================================
 
-  periodo.addEventListener('change', actualizarFechas);
+  periodo.addEventListener('change', () => {
+    actualizarFechas();
+    reporteActual = null;
+    descargar.disabled = true;
+  });
+
+  desde.addEventListener('change', () => {
+    reporteActual = null;
+    descargar.disabled = true;
+  });
+
+  hasta.addEventListener('change', () => {
+    reporteActual = null;
+    descargar.disabled = true;
+  });
+
   generar.addEventListener('click', generarReporte);
+
   descargar.addEventListener('click', descargarReporte);
 
-  // Se muestra inicialmente marzo de 2025
-  // para conservar el diseño del mockup.
-  periodo.value = 'personalizado';
-  desde.value = DEMO.desde;
-  hasta.value = DEMO.hasta;
+  // ==========================================
+  // INICIALIZACIÓN
+  // ==========================================
+
+  // Mostrar el mes actual, no datos ficticios.
+  periodo.value = 'mes';
 
   actualizarFechas();
+
+  descargar.disabled = true;
+
   generarReporte();
 
   if (window.lucide) {
     window.lucide.createIcons();
   }
+
 });

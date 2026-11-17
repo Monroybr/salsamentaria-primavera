@@ -1,8 +1,15 @@
-
 document.addEventListener('DOMContentLoaded', () => {
+  'use strict';
 
-  // Elementos principales.
+  // =====================================================
+  // CONFIGURACIÓN
+  // =====================================================
+
+  const API_URL = 'http://localhost:4000/api/ventas';
+  const POR_PAGINA = 5;
+
   const tabla = document.getElementById('tablaVentas');
+
   if (!tabla) return;
 
   const buscador = document.getElementById('buscarVenta');
@@ -13,16 +20,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const sinVentas = document.getElementById('sinVentas');
   const dialogo = document.getElementById('detalleVenta');
   const contenidoDetalle = document.getElementById('contenidoDetalle');
+  const cerrarDetalle = document.getElementById('cerrarDetalle');
+  const botonExportar = document.getElementById('exportarVentas');
 
-  const CLAVE = 'salsamentaria_ventas';
-  const POR_PAGINA = 5;
-
-  let paginaActual = 1;
+  let ventas = [];
   let filtradas = [];
+  let paginaActual = 1;
 
-  // Fecha local en formato YYYY-MM-DD.
+  // =====================================================
+  // FUNCIONES GENERALES
+  // =====================================================
+
+  function dinero(valor) {
+    const numero = Number(valor);
+
+    return '$' + (Number.isFinite(numero) ? numero : 0)
+      .toLocaleString('es-CO', {
+        maximumFractionDigits: 0
+      });
+  }
+
+  function normalizar(texto) {
+    return String(texto ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
   function fechaLocal(diasAtras = 0) {
     const fecha = new Date();
+
     fecha.setDate(fecha.getDate() - diasAtras);
 
     const anio = fecha.getFullYear();
@@ -32,136 +60,347 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${anio}-${mes}-${dia}`;
   }
 
-  // Ventas de ejemplo para el prototipo.
-  const ejemplos = [
-    {
-      id: 'V-1048',
-      cliente: 'María Rodríguez',
-      fecha: fechaLocal(),
-      hora: '10:42 a. m.',
-      medioPago: 'efectivo',
-      tipo: 'contado',
-      total: 86400,
-      productos: []
-    },
-    {
-      id: 'V-1047',
-      cliente: 'Tienda El Portal',
-      fecha: fechaLocal(),
-      hora: '9:18 a. m.',
-      medioPago: 'credito',
-      tipo: 'credito',
-      total: 214800,
-      productos: []
-    },
-    {
-      id: 'V-1046',
-      cliente: 'Carlos Méndez',
-      fecha: fechaLocal(1),
-      hora: '5:34 p. m.',
-      medioPago: 'transferencia',
-      tipo: 'contado',
-      total: 48200,
-      productos: []
-    },
-    {
-      id: 'V-1045',
-      cliente: 'Panadería Central',
-      fecha: fechaLocal(1),
-      hora: '3:07 p. m.',
-      medioPago: 'credito',
-      tipo: 'credito',
-      total: 176500,
-      productos: []
-    }
-  ];
+  function convertirFecha(valor) {
+    if (!valor) return '';
 
-  // Leer las ventas registradas desde Nueva venta.
-  function leerGuardadas() {
-    try {
-      const datos = JSON.parse(localStorage.getItem(CLAVE) || '[]');
-      return Array.isArray(datos) ? datos : [];
-    } catch {
-      return [];
+    const texto = String(valor);
+
+    // MySQL puede devolver "2026-11-17 15:37:00".
+    if (/^\d{4}-\d{2}-\d{2}/.test(texto)) {
+      return texto.substring(0, 10);
     }
+
+    const fecha = new Date(valor);
+
+    if (Number.isNaN(fecha.getTime())) return '';
+
+    return [
+      fecha.getFullYear(),
+      String(fecha.getMonth() + 1).padStart(2, '0'),
+      String(fecha.getDate()).padStart(2, '0')
+    ].join('-');
   }
 
-  const guardadas = leerGuardadas();
-  const idsGuardados = new Set(guardadas.map(v => v.id));
+  function convertirHora(valor) {
+    if (!valor) return '';
 
-  const ventas = [
-    ...guardadas,
-    ...ejemplos.filter(v => !idsGuardados.has(v.id))
-  ];
+    const texto = String(valor);
 
-  // Formato de pesos colombianos.
-  function dinero(valor) {
-    return '$' + Number(valor).toLocaleString('es-CO', {
-      maximumFractionDigits: 0
+    // Conserva la hora devuelta por MySQL.
+    const coincidencia = texto.match(
+      /(?:T|\s)(\d{2}):(\d{2})(?::\d{2})?/
+    );
+
+    if (coincidencia) {
+      const horas = Number(coincidencia[1]);
+      const minutos = coincidencia[2];
+
+      const hora12 = horas % 12 || 12;
+      const periodo = horas >= 12 ? 'p. m.' : 'a. m.';
+
+      return `${hora12}:${minutos} ${periodo}`;
+    }
+
+    const fecha = new Date(valor);
+
+    if (Number.isNaN(fecha.getTime())) return '';
+
+    return fecha.toLocaleTimeString('es-CO', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
     });
   }
 
-  function normalizar(texto) {
-    return String(texto || '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase();
-  }
-
-  // Fecha visible en la tabla.
   function mostrarFecha(venta) {
-    let etiqueta = venta.fecha;
+    let etiqueta = venta.fecha || 'Sin fecha';
 
-    if (venta.fecha === fechaLocal()) etiqueta = 'Hoy';
-    else if (venta.fecha === fechaLocal(1)) etiqueta = 'Ayer';
+    if (venta.fecha === fechaLocal()) {
+      etiqueta = 'Hoy';
+    } else if (venta.fecha === fechaLocal(1)) {
+      etiqueta = 'Ayer';
+    }
 
-    return `${etiqueta}, ${venta.hora || ''}`;
+    return venta.hora
+      ? `${etiqueta}, ${venta.hora}`
+      : etiqueta;
   }
 
-  // Actualizar los cuatro indicadores.
-  function actualizarIndicadores() {
-    const deHoy = ventas.filter(v => v.fecha === fechaLocal());
+  function establecerTexto(id, valor) {
+    const elemento = document.getElementById(id);
 
-    const total = deHoy.reduce(
-      (suma, venta) => suma + Number(venta.total), 0
+    if (elemento) {
+      elemento.textContent = valor;
+    }
+  }
+
+  function mostrarEstado(mensaje) {
+    tabla.replaceChildren();
+
+    const fila = document.createElement('tr');
+    const celda = document.createElement('td');
+
+    celda.colSpan = 6;
+    celda.textContent = mensaje;
+    celda.style.textAlign = 'center';
+    celda.style.padding = '20px';
+
+    fila.appendChild(celda);
+    tabla.appendChild(fila);
+  }
+
+  // =====================================================
+  // NORMALIZAR REGISTROS DEL BACKEND
+  // =====================================================
+
+  function normalizarVenta(registro) {
+    const idReal = registro.id_venta ??
+      registro.idVenta ??
+      registro.id;
+
+    const tipoOriginal = normalizar(
+      registro.tipo_venta ??
+      registro.tipoVenta ??
+      registro.tipo ??
+      'CONTADO'
     );
 
-    const credito = deHoy
-      .filter(v => v.tipo === 'credito')
-      .reduce((suma, venta) => suma + Number(venta.total), 0);
+    const tipo = tipoOriginal === 'credito'
+      ? 'credito'
+      : 'contado';
 
-    document.getElementById('ventasHoy').textContent = dinero(total);
-    document.getElementById('transaccionesHoy').textContent = deHoy.length;
+    const medioOriginal = normalizar(
+      registro.metodo_pago ??
+      registro.medio_pago ??
+      registro.medioPago ??
+      (tipo === 'credito' ? 'credito' : 'efectivo')
+    );
 
-    document.getElementById('ventaPromedio').textContent =
-      dinero(deHoy.length ? total / deHoy.length : 0);
+    let medioPago = medioOriginal;
 
-    document.getElementById('ventasCredito').textContent = dinero(credito);
+    if (tipo === 'credito') {
+      medioPago = 'credito';
+    }
+
+    const fechaOriginal = registro.fecha_venta ??
+      registro.fechaVenta ??
+      registro.fecha;
+
+    let productos = registro.productos ??
+      registro.detalles ??
+      registro.detalle ??
+      [];
+
+    if (typeof productos === 'string') {
+      try {
+        productos = JSON.parse(productos);
+      } catch {
+        productos = [];
+      }
+    }
+
+    if (!Array.isArray(productos)) {
+      productos = [];
+    }
+
+    return {
+      id: idReal != null ? `V-${idReal}` : 'Sin número',
+      idReal,
+      cliente: registro.cliente_nombre ??
+        registro.nombre_cliente ??
+        registro.nombreCliente ??
+        registro.cliente?.nombre ??
+        registro.cliente ??
+        (tipo === 'credito'
+          ? 'Cliente no especificado'
+          : 'Consumidor final'),
+      fecha: convertirFecha(fechaOriginal),
+      hora: convertirHora(fechaOriginal),
+      tipo,
+      medioPago,
+      total: Number(registro.total ?? 0),
+      productos,
+      observaciones: registro.observaciones ??
+        registro.notas ??
+        registro.observacion ??
+        ''
+    };
   }
 
-  // Crear una celda sin insertar HTML del usuario.
-  function celda(texto, clase = '') {
+  // =====================================================
+  // CONSULTAR VENTAS REALES DESDE MYSQL
+  // =====================================================
+
+  async function cargarVentas() {
+    mostrarEstado('Cargando ventas desde MySQL...');
+
+    if (sinVentas) sinVentas.hidden = true;
+
+    try {
+      const respuesta = await fetch(API_URL, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json'
+        },
+        cache: 'no-store'
+      });
+
+      if (!respuesta.ok) {
+        throw new Error(
+          `Error HTTP ${respuesta.status} al consultar las ventas.`
+        );
+      }
+
+      const datos = await respuesta.json();
+
+      // Admite:
+      // [...]
+      // { ventas: [...] }
+      // { data: [...] }
+      // { resultados: [...] }
+
+      const registros = Array.isArray(datos)
+        ? datos
+        : datos.ventas ??
+          datos.data ??
+          datos.resultados;
+
+      if (!Array.isArray(registros)) {
+        throw new Error(
+          'La API no devolvió una lista válida de ventas.'
+        );
+      }
+
+      ventas = registros
+        .map(normalizarVenta)
+        .sort((a, b) => {
+          const fechaA = `${a.fecha} ${a.hora}`;
+          const fechaB = `${b.fecha} ${b.hora}`;
+
+          if (a.fecha !== b.fecha) {
+            return b.fecha.localeCompare(a.fecha);
+          }
+
+          return Number(b.idReal || 0) -
+            Number(a.idReal || 0);
+        });
+
+      actualizarIndicadores();
+      filtrar();
+
+      console.log(
+        `${ventas.length} ventas cargadas desde MySQL.`,
+        ventas
+      );
+
+    } catch (error) {
+      console.error('Error cargando ventas:', error);
+
+      ventas = [];
+      filtradas = [];
+
+      actualizarIndicadores();
+
+      mostrarEstado(
+        'No fue posible cargar las ventas desde el servidor. ' +
+        'Verifica que el backend esté funcionando y que exista ' +
+        'la ruta GET /api/ventas.'
+      );
+
+      if (contador) {
+        contador.textContent = 'No se pudieron cargar los registros';
+      }
+
+      if (paginacion) {
+        paginacion.replaceChildren();
+      }
+    }
+  }
+
+  // =====================================================
+  // INDICADORES DEL PANEL
+  // =====================================================
+
+  function actualizarIndicadores() {
+    const deHoy = ventas.filter(
+      venta => venta.fecha === fechaLocal()
+    );
+
+    const totalHoy = deHoy.reduce(
+      (suma, venta) => suma + venta.total,
+      0
+    );
+
+    const creditoHoy = deHoy
+      .filter(venta => venta.tipo === 'credito')
+      .reduce(
+        (suma, venta) => suma + venta.total,
+        0
+      );
+
+    const promedio = deHoy.length
+      ? totalHoy / deHoy.length
+      : 0;
+
+    establecerTexto('ventasHoy', dinero(totalHoy));
+    establecerTexto('transaccionesHoy', deHoy.length);
+    establecerTexto('ventaPromedio', dinero(promedio));
+    establecerTexto('ventasCredito', dinero(creditoHoy));
+  }
+
+  // =====================================================
+  // CREACIÓN DE CELDAS
+  // =====================================================
+
+  function crearCelda(texto, clase = '') {
     const td = document.createElement('td');
-    td.textContent = texto;
-    if (clase) td.className = clase;
+
+    td.textContent = String(texto ?? '');
+
+    if (clase) {
+      td.className = clase;
+    }
+
     return td;
   }
 
-  // Mostrar las filas de la página actual.
+  // =====================================================
+  // TABLA DE VENTAS
+  // =====================================================
+
   function mostrarTabla() {
-    tabla.innerHTML = '';
+    tabla.replaceChildren();
 
     const total = filtradas.length;
     const paginas = Math.ceil(total / POR_PAGINA);
+
+    if (paginaActual > paginas && paginas > 0) {
+      paginaActual = paginas;
+    }
+
     const inicio = (paginaActual - 1) * POR_PAGINA;
 
-    filtradas.slice(inicio, inicio + POR_PAGINA).forEach(venta => {
+    const registrosPagina = filtradas.slice(
+      inicio,
+      inicio + POR_PAGINA
+    );
+
+    registrosPagina.forEach(venta => {
       const fila = document.createElement('tr');
 
-      fila.appendChild(celda(venta.id, 'ventas__codigo'));
-      fila.appendChild(celda(venta.cliente));
-      fila.appendChild(celda(mostrarFecha(venta)));
+      fila.appendChild(
+        crearCelda(venta.id, 'ventas__codigo')
+      );
 
+      fila.appendChild(
+        crearCelda(venta.cliente)
+      );
+
+      fila.appendChild(
+        crearCelda(mostrarFecha(venta))
+      );
+
+      // Medio de pago.
       const tdPago = document.createElement('td');
       const etiqueta = document.createElement('span');
 
@@ -170,59 +409,107 @@ document.addEventListener('DOMContentLoaded', () => {
           ? 'ventas__estado--credito'
           : 'ventas__estado--contado');
 
-      etiqueta.textContent = venta.tipo === 'credito'
-        ? 'Crédito'
-        : venta.medioPago === 'transferencia'
-          ? 'Transferencia'
-          : 'Efectivo';
+      etiqueta.textContent =
+        venta.tipo === 'credito'
+          ? 'Crédito'
+          : venta.medioPago === 'transferencia'
+            ? 'Transferencia'
+            : 'Efectivo';
 
       tdPago.appendChild(etiqueta);
       fila.appendChild(tdPago);
 
-      fila.appendChild(celda(dinero(venta.total), 'ventas__importe'));
+      // Total.
+      fila.appendChild(
+        crearCelda(dinero(venta.total), 'ventas__importe')
+      );
 
+      // Acciones.
       const tdAcciones = document.createElement('td');
       const boton = document.createElement('button');
 
       boton.type = 'button';
       boton.className = 'ventas__accion';
-      boton.setAttribute('aria-label', `Ver venta ${venta.id}`);
       boton.textContent = '•••';
 
-      boton.addEventListener('click', () => mostrarDetalle(venta));
+      boton.setAttribute(
+        'aria-label',
+        `Ver detalle de la venta ${venta.id}`
+      );
+
+      boton.addEventListener('click', () => {
+        mostrarDetalle(venta);
+      });
 
       tdAcciones.appendChild(boton);
       fila.appendChild(tdAcciones);
+
       tabla.appendChild(fila);
     });
 
-    sinVentas.hidden = total !== 0;
+    if (sinVentas) {
+      sinVentas.hidden = total !== 0;
+    }
 
-    contador.textContent = total === 0
-      ? 'Mostrando 0 registros'
-      : `Mostrando ${inicio + 1}–${Math.min(inicio + POR_PAGINA, total)} de ${total} registros`;
+    if (contador) {
+      contador.textContent = total === 0
+        ? 'Mostrando 0 registros'
+        : `Mostrando ${inicio + 1}–${Math.min(
+            inicio + POR_PAGINA,
+            total
+          )} de ${total} registros`;
+    }
 
     // Paginación.
-    paginacion.innerHTML = '';
+    if (paginacion) {
+      paginacion.replaceChildren();
 
-    if (paginas > 1) {
-      agregarPagina('‹', paginaActual - 1, paginaActual === 1);
+      if (paginas > 1) {
+        agregarPagina(
+          '‹',
+          paginaActual - 1,
+          paginaActual === 1
+        );
 
-      for (let n = 1; n <= paginas; n++) {
-        agregarPagina(String(n), n, false, n === paginaActual);
+        for (let numero = 1; numero <= paginas; numero++) {
+          agregarPagina(
+            String(numero),
+            numero,
+            false,
+            numero === paginaActual
+          );
+        }
+
+        agregarPagina(
+          '›',
+          paginaActual + 1,
+          paginaActual === paginas
+        );
       }
-
-      agregarPagina('›', paginaActual + 1, paginaActual === paginas);
     }
   }
 
-  function agregarPagina(texto, numero, deshabilitado, activo = false) {
+  // =====================================================
+  // PAGINACIÓN
+  // =====================================================
+
+  function agregarPagina(
+    texto,
+    numero,
+    deshabilitado,
+    activo = false
+  ) {
+    if (!paginacion) return;
+
     const boton = document.createElement('button');
+
     boton.type = 'button';
     boton.textContent = texto;
     boton.disabled = deshabilitado;
 
-    if (activo) boton.classList.add('activo');
+    if (activo) {
+      boton.classList.add('activo');
+    }
 
     boton.addEventListener('click', () => {
       paginaActual = numero;
@@ -232,55 +519,153 @@ document.addEventListener('DOMContentLoaded', () => {
     paginacion.appendChild(boton);
   }
 
-  // Consultar la información de una venta.
-  function mostrarDetalle(venta) {
+  // =====================================================
+  // DETALLE DE UNA VENTA
+  // =====================================================
+
+  async function mostrarDetalle(venta) {
+    if (!dialogo || !contenidoDetalle) return;
+
     contenidoDetalle.replaceChildren();
 
     function agregarTexto(etiqueta, valor) {
-      const p = document.createElement('p');
+      const parrafo = document.createElement('p');
       const strong = document.createElement('strong');
-      strong.textContent = etiqueta + ': ';
-      p.append(strong, document.createTextNode(String(valor)));
-      contenidoDetalle.appendChild(p);
+
+      strong.textContent = `${etiqueta}: `;
+
+      parrafo.append(
+        strong,
+        document.createTextNode(String(valor ?? ''))
+      );
+
+      contenidoDetalle.appendChild(parrafo);
     }
 
     agregarTexto('Venta', venta.id);
     agregarTexto('Cliente', venta.cliente);
     agregarTexto('Fecha', mostrarFecha(venta));
+    agregarTexto(
+      'Tipo de venta',
+      venta.tipo === 'credito' ? 'Crédito' : 'Contado'
+    );
     agregarTexto('Medio de pago', venta.medioPago);
     agregarTexto('Total', dinero(venta.total));
 
-    if (venta.productos && venta.productos.length) {
+    if (venta.observaciones) {
+      agregarTexto('Observaciones', venta.observaciones);
+    }
+
+    // El listado puede incluir productos. Si no los incluye,
+    // se intenta consultar el detalle individual.
+
+    let productos = venta.productos;
+
+    if (!productos.length && venta.idReal != null) {
+      try {
+        const respuesta = await fetch(
+          `${API_URL}/${encodeURIComponent(venta.idReal)}`,
+          {
+            headers: {
+              Accept: 'application/json'
+            }
+          }
+        );
+
+        if (respuesta.ok) {
+          const datos = await respuesta.json();
+
+          const detalle = datos.venta ?? datos;
+
+          productos = detalle.productos ??
+            detalle.detalles ??
+            detalle.detalle ??
+            [];
+
+          if (!Array.isArray(productos)) {
+            productos = [];
+          }
+        }
+      } catch (error) {
+        console.warn(
+          'No se pudo consultar el detalle de la venta:',
+          error
+        );
+      }
+    }
+
+    if (productos.length > 0) {
       const titulo = document.createElement('h3');
       titulo.textContent = 'Productos';
+
       contenidoDetalle.appendChild(titulo);
 
       const lista = document.createElement('ul');
 
-      venta.productos.forEach(producto => {
+      productos.forEach(producto => {
         const item = document.createElement('li');
+
+        const nombre = producto.nombre ??
+          producto.nombre_producto ??
+          producto.producto ??
+          `Producto ${producto.id_producto ?? ''}`;
+
+        const presentacion = producto.presentacion ??
+          producto.nombre_presentacion ??
+          (
+            producto.id_presentacion != null
+              ? `Presentación ${producto.id_presentacion}`
+              : ''
+          );
+
+        const cantidad = Number(producto.cantidad ?? 0);
+
+        const precio = Number(
+          producto.precio_unitario ??
+          producto.precio ??
+          0
+        );
+
+        const subtotal = Number(
+          producto.subtotal ??
+          cantidad * precio
+        );
+
         item.textContent =
-          `${producto.nombre} (${producto.presentacion}) × ${producto.cantidad}`;
+          `${nombre}` +
+          (presentacion ? ` (${presentacion})` : '') +
+          ` × ${cantidad} — ${dinero(subtotal)}`;
+
         lista.appendChild(item);
       });
 
       contenidoDetalle.appendChild(lista);
     } else {
-      agregarTexto('Productos', 'Detalle no disponible en datos de ejemplo');
+      agregarTexto(
+        'Productos',
+        'El detalle de productos no está disponible en la API.'
+      );
     }
 
-    dialogo.showModal();
+    if (!dialogo.open) {
+      dialogo.showModal();
+    }
   }
 
-  document.getElementById('cerrarDetalle').addEventListener(
-    'click', () => dialogo.close()
-  );
+  if (cerrarDetalle && dialogo) {
+    cerrarDetalle.addEventListener('click', () => {
+      dialogo.close();
+    });
+  }
 
-  // Buscar y filtrar.
+  // =====================================================
+  // BÚSQUEDA Y FILTROS
+  // =====================================================
+
   function filtrar() {
-    const texto = normalizar(buscador.value);
-    const periodo = filtroFecha.value;
-    const pago = filtroPago.value;
+    const texto = normalizar(buscador?.value);
+    const periodo = filtroFecha?.value ?? 'todos';
+    const pago = normalizar(filtroPago?.value ?? 'todos');
 
     filtradas = ventas.filter(venta => {
       const coincideTexto =
@@ -288,77 +673,155 @@ document.addEventListener('DOMContentLoaded', () => {
         normalizar(venta.cliente).includes(texto);
 
       const coincidePago =
-        pago === 'todos' || venta.medioPago === pago;
+        pago === 'todos' ||
+        pago === '' ||
+        venta.medioPago === pago ||
+        (pago === 'credito' && venta.tipo === 'credito') ||
+        (
+          pago === 'contado' &&
+          venta.tipo === 'contado'
+        );
 
       let coincideFecha = true;
 
       if (periodo === 'hoy') {
         coincideFecha = venta.fecha === fechaLocal();
+
       } else if (periodo === 'ayer') {
         coincideFecha = venta.fecha === fechaLocal(1);
+
       } else if (periodo === 'semana') {
         const inicioSemana = new Date();
+
         const dia = (inicioSemana.getDay() + 6) % 7;
-        inicioSemana.setDate(inicioSemana.getDate() - dia);
+
+        inicioSemana.setDate(
+          inicioSemana.getDate() - dia
+        );
+
         inicioSemana.setHours(0, 0, 0, 0);
 
-        const fechaVenta = new Date(`${venta.fecha}T00:00:00`);
-        coincideFecha = fechaVenta >= inicioSemana &&
+        const fechaVenta = new Date(
+          `${venta.fecha}T00:00:00`
+        );
+
+        coincideFecha =
+          !Number.isNaN(fechaVenta.getTime()) &&
+          fechaVenta >= inicioSemana &&
           fechaVenta <= new Date();
+
+      } else if (periodo === 'mes') {
+        coincideFecha =
+          venta.fecha.substring(0, 7) ===
+          fechaLocal().substring(0, 7);
       }
 
-      return coincideTexto && coincidePago && coincideFecha;
+      return (
+        coincideTexto &&
+        coincidePago &&
+        coincideFecha
+      );
     });
 
     paginaActual = 1;
+
     mostrarTabla();
   }
 
-  // Exportar las ventas filtradas.
-  document.getElementById('exportarVentas').addEventListener('click', () => {
+  // =====================================================
+  // EXPORTAR CSV
+  // =====================================================
+
+  function exportarVentas() {
     if (!filtradas.length) {
       alert('No hay ventas para exportar.');
       return;
     }
 
     const filas = [
-      ['Venta', 'Cliente', 'Fecha', 'Medio de pago', 'Total'],
-      ...filtradas.map(v => [
-        v.id, v.cliente, v.fecha, v.medioPago, v.total
+      [
+        'Venta',
+        'Cliente',
+        'Fecha',
+        'Tipo de venta',
+        'Medio de pago',
+        'Total'
+      ],
+      ...filtradas.map(venta => [
+        venta.id,
+        venta.cliente,
+        venta.fecha,
+        venta.tipo,
+        venta.medioPago,
+        venta.total
       ])
     ];
 
-    const escapar = valor => {
+    function escaparCSV(valor) {
       let texto = String(valor ?? '');
-      if (/^\s*[=+\-@]/.test(texto)) texto = "'" + texto;
-      return `"${texto.replace(/"/g, '""')}"`;
-    };
 
-    const csv = filas.map(
-      fila => fila.map(escapar).join(';')
-    ).join('\r\n');
+      // Evita que una hoja de cálculo interprete
+      // texto externo como una fórmula.
+      if (/^\s*[=+\-@\t\r]/.test(texto)) {
+        texto = "'" + texto;
+      }
+
+      return `"${texto.replace(/"/g, '""')}"`;
+    }
+
+    const csv = filas
+      .map(fila => fila.map(escaparCSV).join(';'))
+      .join('\r\n');
 
     const blob = new Blob(
       ['\uFEFF' + csv],
-      { type: 'text/csv;charset=utf-8' }
+      {
+        type: 'text/csv;charset=utf-8'
+      }
     );
 
     const url = URL.createObjectURL(blob);
     const enlace = document.createElement('a');
 
     enlace.href = url;
-    enlace.download = 'ventas.csv';
+    enlace.download = `ventas_${fechaLocal()}.csv`;
+
+    document.body.appendChild(enlace);
     enlace.click();
+    enlace.remove();
 
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  });
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
 
-  buscador.addEventListener('input', filtrar);
-  filtroFecha.addEventListener('change', filtrar);
-  filtroPago.addEventListener('change', filtrar);
+  // =====================================================
+  // EVENTOS
+  // =====================================================
 
-  actualizarIndicadores();
-  filtrar();
+  if (buscador) {
+    buscador.addEventListener('input', filtrar);
+  }
 
-  if (window.lucide) window.lucide.createIcons();
+  if (filtroFecha) {
+    filtroFecha.addEventListener('change', filtrar);
+  }
+
+  if (filtroPago) {
+    filtroPago.addEventListener('change', filtrar);
+  }
+
+  if (botonExportar) {
+    botonExportar.addEventListener('click', exportarVentas);
+  }
+
+  // =====================================================
+  // INICIALIZACIÓN
+  // =====================================================
+
+  cargarVentas();
+
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
 });

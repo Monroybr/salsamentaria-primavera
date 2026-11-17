@@ -1,70 +1,28 @@
-
 /*
+ * SALSAMENTARIA PRIMAVERA
  * CARTERA - DATOS COMPARTIDOS
- * Maneja las cuentas por cobrar y sus abonos
- * en el prototipo del navegador.
+ *
+ * Integración con backend Node.js y MySQL.
  */
 
 window.CarteraDatos = (() => {
-  const CLAVE_CUENTAS = 'salsamentaria_cartera';
-  const CLAVE_ABONOS = 'salsamentaria_abonos';
 
-  // Registros de ejemplo del mockup.
-  // Las fechas son históricas y no se modifican automáticamente.
-  const ejemplos = [
-    {
-      id: 'CC-V-1047',
-      ventaId: 'V-1047',
-      clienteId: 'CLI-001',
-      cliente: 'Tienda El Portal',
-      fecha: '2025-03-12',
-      vencimiento: '2025-03-27',
-      montoTotal: 328400,
-      saldoPendiente: 328400,
-      demo: true
-    },
-    {
-      id: 'CC-V-1039',
-      ventaId: 'V-1039',
-      clienteId: 'CLI-002',
-      cliente: 'Panadería Central',
-      fecha: '2025-03-08',
-      vencimiento: '2025-03-23',
-      montoTotal: 176500,
-      saldoPendiente: 176500,
-      demo: true
-    },
-    {
-      id: 'CC-V-1031',
-      ventaId: 'V-1031',
-      clienteId: 'CLI-004',
-      cliente: 'Mercado San José',
-      fecha: '2025-02-27',
-      vencimiento: '2025-03-14',
-      montoTotal: 92000,
-      saldoPendiente: 92000,
-      demo: true
-    }
-  ];
+  const API = 'http://localhost:4000/api/cartera';
 
-  function leer(clave) {
-    try {
-      const datos = JSON.parse(localStorage.getItem(clave) || '[]');
-      return Array.isArray(datos) ? datos : [];
-    } catch {
-      return [];
-    }
-  }
-
-  function guardar(clave, datos) {
-    localStorage.setItem(clave, JSON.stringify(datos));
-  }
+  // ==========================================
+  // FORMATEAR DINERO
+  // ==========================================
 
   function dinero(valor) {
     return '$' + Number(valor || 0).toLocaleString('es-CO', {
-      maximumFractionDigits: 0
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
     });
   }
+
+  // ==========================================
+  // FECHA LOCAL
+  // ==========================================
 
   function fechaLocal() {
     const hoy = new Date();
@@ -76,6 +34,10 @@ window.CarteraDatos = (() => {
     ].join('-');
   }
 
+  // ==========================================
+  // NORMALIZAR TEXTO
+  // ==========================================
+
   function normalizar(texto) {
     return String(texto || '')
       .normalize('NFD')
@@ -84,133 +46,161 @@ window.CarteraDatos = (() => {
       .trim();
   }
 
-  // Devuelve las cuentas guardadas y las del mockup.
-  // Si se guardó una cuenta de ejemplo, se utiliza
-  // su versión actualizada en lugar del valor inicial.
-  function obtenerCuentas() {
-    const guardadas = leer(CLAVE_CUENTAS);
-    const ids = new Set(guardadas.map(c => c.id));
+  // ==========================================
+  // CONSULTAR API
+  // ==========================================
 
-    return [
-      ...guardadas,
-      ...ejemplos.filter(c => !ids.has(c.id))
-    ];
-  }
-
-  function obtenerPendientes() {
-    return obtenerCuentas().filter(
-      cuenta => Number(cuenta.saldoPendiente) > 0
-    );
-  }
-
-  function buscarCuenta(id) {
-    return obtenerCuentas().find(c => c.id === id);
-  }
-
-  function obtenerAbonos() {
-    return leer(CLAVE_ABONOS);
-  }
-
-  function siguienteComprobante() {
-    const abonos = obtenerAbonos();
-
-    const numeros = abonos.map(a =>
-      Number(String(a.id).replace('AB-', ''))
-    ).filter(Number.isFinite);
-
-    const numero = Math.max(185, ...numeros) + 1;
-
-    return `AB-${String(numero).padStart(4, '0')}`;
-  }
-
-  // Registrar un abono y actualizar el saldo.
-  function registrarAbono(datos) {
-    const cuentasGuardadas = leer(CLAVE_CUENTAS);
-    const abonosGuardados = leer(CLAVE_ABONOS);
-
-    const cuenta = buscarCuenta(datos.cuentaId);
-
-    if (!cuenta) {
-      throw new Error('No se encontró la cuenta por cobrar.');
-    }
-
-    const valor = Number(datos.valor);
-    const saldo = Number(cuenta.saldoPendiente);
-
-    if (!Number.isFinite(valor) || valor <= 0) {
-      throw new Error('El abono debe ser mayor que cero.');
-    }
-
-    if (valor > saldo) {
-      throw new Error('El abono no puede superar el saldo pendiente.');
-    }
-
-    const abono = {
-      id: siguienteComprobante(),
-      cuentaId: cuenta.id,
-      ventaId: cuenta.ventaId,
-      clienteId: cuenta.clienteId || '',
-      cliente: cuenta.cliente,
-      valor,
-      medioPago: datos.medioPago,
-      fecha: datos.fecha,
-      referencia: datos.referencia || '',
-      observaciones: datos.observaciones || '',
-      fechaRegistro: new Date().toISOString()
-    };
-
-    const cuentaActualizada = {
-      ...cuenta,
-      saldoPendiente: Math.max(0, saldo - valor),
-      estado: valor === saldo ? 'pagada' : 'pendiente'
-    };
-
-    const indice = cuentasGuardadas.findIndex(
-      c => c.id === cuenta.id
-    );
-
-    if (indice >= 0) {
-      cuentasGuardadas[indice] = cuentaActualizada;
-    } else {
-      cuentasGuardadas.unshift(cuentaActualizada);
-    }
-
-    abonosGuardados.unshift(abono);
-
-    // Se guardan ambos conjuntos de datos.
-    // En el backend esto será una transacción MySQL.
-    const anteriorCuentas = localStorage.getItem(CLAVE_CUENTAS);
-    const anteriorAbonos = localStorage.getItem(CLAVE_ABONOS);
+  async function solicitar(url, opciones = {}) {
+    let respuesta;
 
     try {
-      guardar(CLAVE_CUENTAS, cuentasGuardadas);
-      guardar(CLAVE_ABONOS, abonosGuardados);
-    } catch (error) {
-      // Recuperar el estado previo si falla la escritura.
-      try {
-        if (anteriorCuentas === null) {
-          localStorage.removeItem(CLAVE_CUENTAS);
-        } else {
-          localStorage.setItem(CLAVE_CUENTAS, anteriorCuentas);
-        }
-
-        if (anteriorAbonos === null) {
-          localStorage.removeItem(CLAVE_ABONOS);
-        } else {
-          localStorage.setItem(CLAVE_ABONOS, anteriorAbonos);
-        }
-      } catch (recuperacionError) {
-        console.error('No se pudo restaurar el estado:', recuperacionError);
-      }
-
-      throw error;
+      respuesta = await fetch(url, opciones);
+    } catch {
+      throw new Error(
+        'No se pudo conectar con el servidor. ' +
+        'Verifica que el backend funcione en el puerto 4000.'
+      );
     }
 
+    let resultado;
+
+    try {
+      resultado = await respuesta.json();
+    } catch {
+      throw new Error(
+        'El servidor devolvió una respuesta no válida.'
+      );
+    }
+
+    if (!respuesta.ok) {
+      throw new Error(
+        resultado.mensaje ||
+        'Ocurrió un error al consultar el servidor.'
+      );
+    }
+
+    return resultado;
+  }
+
+  // ==========================================
+  // ADAPTAR CUENTA DE MYSQL
+  // ==========================================
+
+  function adaptarCuenta(cuenta) {
     return {
-      abono,
-      cuenta: cuentaActualizada
+      id: String(cuenta.id_cuenta),
+      ventaId: `V-${cuenta.id_venta}`,
+      clienteId: String(cuenta.id_cliente),
+      cliente: cuenta.cliente,
+      fecha: cuenta.fecha,
+      vencimiento: cuenta.vencimiento,
+      montoTotal: Number(cuenta.valor_total),
+      saldoPendiente: Number(cuenta.saldo_pendiente),
+      estado: cuenta.estado
     };
   }
+
+  // ==========================================
+  // OBTENER CUENTAS POR COBRAR
+  // ==========================================
+
+  async function obtenerCuentas() {
+    const cuentas = await solicitar(API);
+
+    if (!Array.isArray(cuentas)) {
+      throw new Error(
+        'La API no devolvió una lista válida de cuentas.'
+      );
+    }
+
+    return cuentas.map(adaptarCuenta);
+  }
+
+  // ==========================================
+  // OBTENER CUENTAS PENDIENTES
+  // ==========================================
+
+  async function obtenerPendientes() {
+    const cuentas = await obtenerCuentas();
+
+    return cuentas.filter(
+      cuenta => cuenta.saldoPendiente > 0
+    );
+  }
+
+  // ==========================================
+  // BUSCAR CUENTA POR ID
+  // ==========================================
+
+  async function buscarCuenta(id) {
+    const cuenta = await solicitar(
+      `${API}/${encodeURIComponent(id)}`
+    );
+
+    return adaptarCuenta(cuenta);
+  }
+
+  // ==========================================
+  // REGISTRAR ABONO EN MYSQL
+  // ==========================================
+
+  async function registrarAbono(datos) {
+    const idCuenta = Number(datos.cuentaId);
+
+    if (!Number.isSafeInteger(idCuenta) || idCuenta <= 0) {
+      throw new Error(
+        'Selecciona una cuenta por cobrar válida.'
+      );
+    }
+
+    return solicitar(`${API}/${idCuenta}/abonos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        valor: datos.valor,
+        medioPago: datos.medioPago,
+        fecha: datos.fecha,
+        referencia: datos.referencia || '',
+        observaciones: datos.observaciones || ''
+      })
+    });
+  }
+
+  // ==========================================
+  // CONSULTAR HISTORIAL DE ABONOS
+  // ==========================================
+
+  async function obtenerHistorialAbonos() {
+    const historial = await solicitar(
+      `${API}/abonos/historial`
+    );
+
+    if (!Array.isArray(historial)) {
+      throw new Error(
+        'La API no devolvió un historial válido.'
+      );
+    }
+
+    return historial.map(abono => ({
+      id: Number(abono.id_abono),
+      cuentaId: String(abono.id_cuenta),
+      ventaId: `V-${abono.id_venta}`,
+      clienteId: String(abono.id_cliente),
+      cliente: abono.cliente,
+      fecha: abono.fecha,
+      valor: Number(abono.valor_abono),
+      medioPago: abono.metodo_pago,
+      observaciones: abono.observaciones || '',
+      saldoPendiente: Number(abono.saldo_pendiente),
+      estadoCuenta: abono.estado
+    }));
+  }
+
+  // ==========================================
+  // FUNCIONES DISPONIBLES
+  // ==========================================
 
   return {
     dinero,
@@ -219,8 +209,8 @@ window.CarteraDatos = (() => {
     obtenerCuentas,
     obtenerPendientes,
     buscarCuenta,
-    obtenerAbonos,
-    siguienteComprobante,
-    registrarAbono
+    registrarAbono,
+    obtenerHistorialAbonos
   };
+
 })();

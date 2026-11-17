@@ -1,0 +1,168 @@
+{% extends "base.njk" %}
+
+{% block titulo %}
+Editar producto | Salsamentaria Primavera
+{% endblock %}
+
+{% block clase_body %}productos-page{% endblock %}
+
+{% block contenido %}
+
+<main class="dashboard productos">
+
+  <div class="productos__encabezado">
+    <div>
+      <p class="dashboard__ruta">
+        Productos / Editar producto
+      </p>
+
+      <h1>Editar producto</h1>
+
+      <p>
+        Actualiza la información del producto seleccionado.
+      </p>
+    </div>
+
+    <a href="productos.html" class="dashboard__nueva-venta">
+      Volver a productos
+    </a>
+  </div>
+
+  <section class="productos__tarjeta" style="padding: 24px;">
+
+    <form id="formEditarProducto">
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
+
+        <div>
+          <label for="editarNombre">Nombre del producto</label>
+          <input
+            id="editarNombre"
+            name="nombre"
+            type="text"
+            maxlength="150"
+            required
+            style="width:100%;padding:12px;"
+          >
+        </div>
+
+        <div>
+          <label for="editarCodigo">Código</label>
+          <input
+            id="editarCodigo"
+            name="codigo"
+            type="text"
+            maxlength="50"
+            required
+            style="width:100%;padding:12px;"
+          >
+        </div>
+
+        <div>
+          <label for="editarCategoria">Categoría</label>
+          <select
+            id="editarCategoria"
+            name="id_categoria"
+            required
+            style="width:100%;padding:12px;"
+          >
+            <option value="">Selecciona una categoría</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="editarCompra">Precio de compra</label>
+          <input
+            id="editarCompra"
+            name="precio_compra"
+            type="number"
+            min="0"
+            max="9999999999.99"
+            step="0.01"
+            required
+            style="width:100%;padding:12px;"
+          >
+        </div>
+
+        <div>
+          <label for="editarVenta">Precio de venta</label>
+          <input
+            id="editarVenta"
+            name="precio_venta"
+            type="number"
+            min="0"
+            max="9999999999.99"
+            step="0.01"
+            required
+            style="width:100%;padding:12px;"
+          >
+        </div>
+
+        <div>
+          <label for="editarMinimo">Stock mínimo</label>
+          <input
+            id="editarMinimo"
+            name="stock_minimo"
+            type="number"
+            min="0"
+            max="2147483647"
+            step="1"
+            required
+            style="width:100%;padding:12px;"
+          >
+        </div>
+
+        <div>
+          <label for="editarExistencia">Existencias actuales</label>
+          <input
+            id="editarExistencia"
+            type="number"
+            readonly
+            style="width:100%;padding:12px;background:#f1f5f3;"
+          >
+          <small>
+            Las existencias se modifican desde Inventario.
+          </small>
+        </div>
+
+      </div>
+
+      <div style="margin-top:20px;">
+        <label for="editarDescripcion">Descripción</label>
+        <textarea
+          id="editarDescripcion"
+          name="descripcion"
+          rows="4"
+          style="width:100%;padding:12px;"
+        ></textarea>
+      </div>
+
+      <p id="mensajeEditarProducto" role="status" aria-live="polite"></p>
+
+      <div style="display:flex;gap:12px;margin-top:24px;">
+
+        <button
+          type="submit"
+          id="btnGuardarProducto"
+          class="dashboard__nueva-venta"
+        >
+          Guardar cambios
+        </button>
+
+        <a href="productos.html">
+          Cancelar
+        </a>
+
+      </div>
+
+    </form>
+
+  </section>
+
+</main>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="js/editar-producto.js"></script>
+{% endblock %}

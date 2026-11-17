@@ -1,561 +1,759 @@
-
 document.addEventListener('DOMContentLoaded', () => {
+  'use strict';
 
-  // =====================================
-  // ELEMENTOS DEL FORMULARIO
-  // =====================================
+  // ============================================
+  // CONFIGURACIÓN
+  // ============================================
 
-  const formulario = document.getElementById('formNuevaVenta');
-  if (!formulario) return;
+  const API_URL = 'http://localhost:4000/api/ventas';
 
-  const buscador = document.getElementById('buscarProductoVenta');
-  const disponibles = document.getElementById('productosDisponibles');
-  const tabla = document.getElementById('detalleProductosVenta');
-  const contador = document.getElementById('contadorProductosVenta');
+  const $ = (id) => document.getElementById(id);
 
-  const campoCliente = document.getElementById('campoCliente');
-  const cliente = document.getElementById('clienteVenta');
-  const campoMedio = document.getElementById('campoMedioPago');
-  const medioPago = document.getElementById('medioPagoVenta');
-  const campoRecibido = document.getElementById('campoValorRecibido');
-  const recibido = document.getElementById('valorRecibido');
-  const campoCambio = document.getElementById('campoCambio');
-  const cambio = document.getElementById('cambioVenta');
+  const elementos = {
+    formulario: $('formNuevaVenta'),
+    numeroVenta: $('numeroNuevaVenta'),
+    buscarProducto: $('buscarProductoVenta'),
+    productosDisponibles: $('productosDisponibles'),
+    detalleProductos: $('detalleProductosVenta'),
+    contadorProductos: $('contadorProductosVenta'),
+    agregarProducto: $('agregarOtroProducto'),
+    campoCliente: $('campoCliente'),
+    cliente: $('clienteVenta'),
+    campoMedioPago: $('campoMedioPago'),
+    medioPago: $('medioPagoVenta'),
+    campoValorRecibido: $('campoValorRecibido'),
+    valorRecibido: $('valorRecibido'),
+    campoCambio: $('campoCambio'),
+    cambio: $('cambioVenta'),
+    subtotal: $('subtotalVenta'),
+    total: $('totalVenta'),
+    notas: $('notasVenta'),
+    mensaje: $('mensajeVenta'),
+    botonRegistrar: $('registrarVenta')
+  };
 
-  const subtotalTexto = document.getElementById('subtotalVenta');
-  const totalTexto = document.getElementById('totalVenta');
-  const mensaje = document.getElementById('mensajeVenta');
-  const botonGuardar = document.getElementById('registrarVenta');
+  if (!elementos.formulario) return;
 
-  const CLAVE_VENTAS = 'salsamentaria_ventas';
-  const CLAVE_CARTERA = 'salsamentaria_cartera';
+  let catalogo = [];
+  let carrito = [];
+  let clientes = [];
+  let tipoVenta = 'CONTADO';
+  let guardando = false;
+  let cargandoCatalogo = false;
 
-  // =====================================
-  // CATÁLOGO DE EJEMPLO
-  // =====================================
-
-  // Más adelante estos datos vendrán de MySQL.
-  // Cada producto puede tener varias presentaciones.
-  const catalogo = [
-    {
-      id: 'SAL-001',
-      nombre: 'Jamón de cerdo premium',
-      stock: 50,
-      presentaciones: [
-        { nombre: 'Una libra - 500 g', precio: 14250 },
-        { nombre: 'Un kilogramo - 1.000 g', precio: 28500 }
-      ]
-    },
-    {
-      id: 'EMB-008',
-      nombre: 'Salchicha ranchera',
-      stock: 24,
-      presentaciones: [
-        { nombre: 'Paquete - 6 unidades', precio: 12400 }
-      ]
-    },
-    {
-      id: 'LAC-014',
-      nombre: 'Queso campesino',
-      stock: 8,
-      presentaciones: [
-        { nombre: 'Media libra - 250 g', precio: 9900 },
-        { nombre: 'Una libra - 500 g', precio: 19800 }
-      ]
-    },
-    {
-      id: 'EMB-011',
-      nombre: 'Chorizo santarrosano',
-      stock: 8,
-      presentaciones: [
-        { nombre: 'Paquete - 5 unidades', precio: 16900 }
-      ]
-    },
-    {
-      id: 'SAL-022',
-      nombre: 'Mortadela tradicional',
-      stock: 32,
-      presentaciones: [
-        { nombre: 'Media libra - 250 g', precio: 8800 },
-        { nombre: 'Una libra - 500 g', precio: 17600 }
-      ]
-    },
-    {
-      id: 'GRA-001',
-      nombre: 'Harina de trigo',
-      stock: 40,
-      presentaciones: [
-        { nombre: 'Media libra - 250 g', precio: 1200 },
-        { nombre: 'Una libra - 500 g', precio: 2300 },
-        { nombre: 'Un kilogramo - 1.000 g', precio: 4500 }
-      ]
-    }
-  ];
-
-  // Productos agregados a la venta.
-  const carrito = [];
-
-  function dinero(valor) {
-    return '$' + Number(valor).toLocaleString('es-CO', {
+  const formatoMoneda = (valor) =>
+    new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
       maximumFractionDigits: 0
-    });
-  }
+    }).format(Number(valor) || 0);
 
-  function leerDatos(clave) {
+  const mostrarMensaje = (texto, esError = false) => {
+    if (!elementos.mensaje) return;
+
+    elementos.mensaje.hidden = false;
+    elementos.mensaje.textContent = texto;
+    elementos.mensaje.style.color = esError
+      ? '#b91c1c'
+      : '#15803d';
+  };
+
+  const limpiarMensaje = () => {
+    if (!elementos.mensaje) return;
+    elementos.mensaje.hidden = true;
+    elementos.mensaje.textContent = '';
+  };
+
+  const actualizarIconos = () => {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  };
+
+  // Evitar insertar texto externo como HTML.
+  const escaparHTML = (valor) =>
+    String(valor ?? '').replace(/[&<>"']/g, (caracter) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[caracter]);
+
+  // ============================================
+  // CONSULTAR PRODUCTOS DESDE MYSQL
+  // ============================================
+
+  async function cargarProductos() {
+    cargandoCatalogo = true;
+
+    if (elementos.productosDisponibles) {
+      elementos.productosDisponibles.textContent =
+        'Cargando productos...';
+    }
+
     try {
-      const datos = JSON.parse(localStorage.getItem(clave) || '[]');
-      return Array.isArray(datos) ? datos : [];
-    } catch {
-      return [];
+      const respuesta = await fetch(`${API_URL}/productos`, {
+        cache: 'no-store'
+      });
+
+      if (!respuesta.ok) {
+        throw new Error('No fue posible consultar los productos.');
+      }
+
+      const datos = await respuesta.json();
+
+      if (!Array.isArray(datos)) {
+        throw new Error('La respuesta de productos no es válida.');
+      }
+
+      catalogo = datos.map((producto) => ({
+        id_producto: Number(producto.id_producto),
+        id_presentacion: Number(producto.id_presentacion),
+        codigo: String(producto.codigo ?? ''),
+        nombre: String(producto.nombre ?? ''),
+        peso_gramos: Number(producto.peso_gramos),
+        stock_actual: Number(producto.stock_actual),
+        precio_venta: Number(producto.precio_venta)
+      })).filter((producto) =>
+        Number.isSafeInteger(producto.id_producto) &&
+        Number.isSafeInteger(producto.id_presentacion) &&
+        producto.id_presentacion > 0 &&
+        Number.isFinite(producto.stock_actual) &&
+        Number.isFinite(producto.precio_venta)
+      );
+
+      renderizarProductos();
+    } catch (error) {
+      console.error('Error cargando productos:', error);
+      catalogo = [];
+
+      if (elementos.productosDisponibles) {
+        elementos.productosDisponibles.textContent =
+          'No fue posible cargar los productos desde MySQL.';
+      }
+
+      mostrarMensaje(error.message, true);
+    } finally {
+      cargandoCatalogo = false;
     }
   }
 
-  function normalizar(texto) {
-    return String(texto || '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase();
+  // ============================================
+  // CONSULTAR CLIENTES DESDE MYSQL
+  // ============================================
+
+  async function cargarClientes() {
+    if (!elementos.cliente) return;
+
+    elementos.cliente.innerHTML =
+      '<option value="">Cargando clientes...</option>';
+
+    try {
+      const respuesta = await fetch(`${API_URL}/clientes`, {
+        cache: 'no-store'
+      });
+
+      if (!respuesta.ok) {
+        throw new Error('No fue posible consultar los clientes.');
+      }
+
+      const datos = await respuesta.json();
+
+      if (!Array.isArray(datos)) {
+        throw new Error('La respuesta de clientes no es válida.');
+      }
+
+      clientes = datos;
+
+      elementos.cliente.innerHTML =
+        '<option value="">Seleccionar cliente...</option>';
+
+      clientes.forEach((cliente) => {
+        const opcion = document.createElement('option');
+
+        opcion.value = String(cliente.id_cliente);
+        opcion.textContent = cliente.numero_documento
+          ? `${cliente.nombre} - ${cliente.numero_documento}`
+          : cliente.nombre;
+
+        elementos.cliente.appendChild(opcion);
+      });
+    } catch (error) {
+      console.error('Error cargando clientes:', error);
+
+      clientes = [];
+
+      elementos.cliente.innerHTML =
+        '<option value="">No se pudieron cargar los clientes</option>';
+
+      mostrarMensaje(error.message, true);
+    }
   }
 
-  function mostrarMensaje(texto) {
-    mensaje.textContent = texto;
-    mensaje.hidden = false;
-  }
+  // ============================================
+  // MOSTRAR PRODUCTOS DISPONIBLES
+  // ============================================
 
-  function ocultarMensaje() {
-    mensaje.hidden = true;
-  }
+  function renderizarProductos() {
+    const contenedor = elementos.productosDisponibles;
 
-  // =====================================
-  // NÚMERO DE LA SIGUIENTE VENTA
-  // =====================================
+    if (!contenedor || cargandoCatalogo) return;
 
-  function siguienteNumero() {
-    const ventas = leerDatos(CLAVE_VENTAS);
+    const busqueda = (
+      elementos.buscarProducto?.value || ''
+    ).trim().toLowerCase();
 
-    const numeros = ventas
-      .map(v => Number(String(v.id).replace('V-', '')))
-      .filter(Number.isFinite);
+    const productosFiltrados = catalogo.filter((producto) => {
+      const texto =
+        `${producto.nombre} ${producto.codigo} ${producto.peso_gramos}`
+          .toLowerCase();
 
-    const ultimo = Math.max(1048, ...numeros);
+      return texto.includes(busqueda);
+    });
 
-    return `V-${ultimo + 1}`;
-  }
+    contenedor.innerHTML = '';
 
-  document.getElementById('numeroNuevaVenta').textContent =
-    siguienteNumero();
+    if (productosFiltrados.length === 0) {
+      contenedor.textContent =
+        'No se encontraron productos disponibles.';
+      return;
+    }
 
-  // =====================================
-  // PRODUCTOS DISPONIBLES
-  // =====================================
+    productosFiltrados.forEach((producto) => {
+      const agotado = producto.stock_actual <= 0;
+      const seleccionado = carrito.some(
+        (item) => item.id_presentacion === producto.id_presentacion
+      );
 
-  function mostrarDisponibles() {
-    disponibles.replaceChildren();
-
-    const texto = normalizar(buscador.value);
-
-    const resultados = catalogo.filter(producto =>
-      normalizar(producto.nombre).includes(texto) ||
-      normalizar(producto.id).includes(texto)
-    );
-
-    resultados.slice(0, 3).forEach(producto => {
       const boton = document.createElement('button');
+
       boton.type = 'button';
       boton.className = 'nueva-venta__sugerencia';
+      boton.disabled = agotado;
 
-      const icono = document.createElement('span');
-      icono.className = 'nueva-venta__icono';
-      icono.innerHTML = '<i data-lucide="package"></i>';
+      boton.innerHTML = `
+        <span>
+          <strong>${escaparHTML(producto.nombre)}</strong>
+          <small>
+            ${escaparHTML(producto.codigo)}
+            · ${producto.peso_gramos} g
+            · Stock: ${producto.stock_actual}
+          </small>
+        </span>
+        <span>
+          <strong>${formatoMoneda(producto.precio_venta)}</strong>
+          <small>
+            ${agotado ? 'Agotado' : seleccionado ? 'Agregar más' : 'Agregar'}
+          </small>
+        </span>
+      `;
 
-      const informacion = document.createElement('span');
+      boton.addEventListener('click', () => {
+        agregarAlCarrito(producto.id_presentacion);
+      });
 
-      const nombre = document.createElement('strong');
-      nombre.textContent = producto.nombre;
-
-      const stock = document.createElement('small');
-      stock.textContent = `Disponible: ${producto.stock} unidades`;
-
-      informacion.append(nombre, stock);
-
-      const mas = document.createElement('i');
-      mas.setAttribute('data-lucide', 'plus');
-
-      boton.append(icono, informacion, mas);
-
-      boton.addEventListener('click', () => agregarProducto(producto));
-
-      disponibles.appendChild(boton);
+      contenedor.appendChild(boton);
     });
-
-    if (!resultados.length) {
-      const aviso = document.createElement('p');
-      aviso.textContent = 'No se encontraron productos.';
-      disponibles.appendChild(aviso);
-    }
-
-    if (window.lucide) window.lucide.createIcons();
   }
 
-  // =====================================
-  // AGREGAR PRODUCTOS
-  // =====================================
+  // ============================================
+  // AGREGAR PRODUCTOS AL CARRITO
+  // ============================================
 
-  function agregarProducto(producto) {
-    ocultarMensaje();
+  function agregarAlCarrito(idPresentacion) {
+    limpiarMensaje();
 
-    const existente = carrito.find(item => item.id === producto.id);
+    const producto = catalogo.find(
+      (item) => item.id_presentacion === Number(idPresentacion)
+    );
+
+    if (!producto) {
+      mostrarMensaje('El producto seleccionado no existe.', true);
+      return;
+    }
+
+    if (producto.stock_actual <= 0) {
+      mostrarMensaje('Esta presentación no tiene existencias.', true);
+      return;
+    }
+
+    const existente = carrito.find(
+      (item) => item.id_presentacion === producto.id_presentacion
+    );
 
     if (existente) {
-      if (existente.cantidad >= producto.stock) {
-        mostrarMensaje('No hay más unidades disponibles de este producto.');
+      if (existente.cantidad >= producto.stock_actual) {
+        mostrarMensaje(
+          'No puedes agregar más unidades que las disponibles.',
+          true
+        );
         return;
       }
 
-      existente.cantidad++;
+      existente.cantidad += 1;
     } else {
-      if (producto.stock <= 0) {
-        mostrarMensaje('Este producto no tiene existencias.');
-        return;
-      }
-
       carrito.push({
-        id: producto.id,
+        id_producto: producto.id_producto,
+        id_presentacion: producto.id_presentacion,
+        codigo: producto.codigo,
         nombre: producto.nombre,
-        stock: producto.stock,
-        presentaciones: producto.presentaciones,
-        presentacionIndice: 0,
+        peso_gramos: producto.peso_gramos,
+        precio_unitario: producto.precio_venta,
+        stock_actual: producto.stock_actual,
         cantidad: 1
       });
     }
 
-    mostrarCarrito();
+    renderizarCarrito();
+    renderizarProductos();
   }
 
-  // =====================================
-  // MOSTRAR PRODUCTOS SELECCIONADOS
-  // =====================================
+  // ============================================
+  // CAMBIAR CANTIDAD
+  // ============================================
 
-  function mostrarCarrito() {
-    tabla.replaceChildren();
+  function cambiarCantidad(idPresentacion, nuevaCantidad) {
+    const item = carrito.find(
+      (producto) => producto.id_presentacion === Number(idPresentacion)
+    );
 
-    carrito.forEach(item => {
+    if (!item) return;
+
+    const cantidad = Number(nuevaCantidad);
+
+    if (!Number.isSafeInteger(cantidad) || cantidad <= 0) {
+      mostrarMensaje('La cantidad debe ser un número entero positivo.', true);
+      renderizarCarrito();
+      return;
+    }
+
+    if (cantidad > item.stock_actual) {
+      mostrarMensaje(
+        `Solo hay ${item.stock_actual} unidades disponibles.`,
+        true
+      );
+      renderizarCarrito();
+      return;
+    }
+
+    limpiarMensaje();
+    item.cantidad = cantidad;
+
+    renderizarCarrito();
+  }
+
+  // ============================================
+  // ELIMINAR PRODUCTO
+  // ============================================
+
+  function eliminarProducto(idPresentacion) {
+    carrito = carrito.filter(
+      (item) => item.id_presentacion !== Number(idPresentacion)
+    );
+
+    limpiarMensaje();
+    renderizarCarrito();
+    renderizarProductos();
+  }
+
+  // ============================================
+  // MOSTRAR CARRITO
+  // ============================================
+
+  function renderizarCarrito() {
+    const tabla = elementos.detalleProductos;
+
+    if (!tabla) return;
+
+    tabla.innerHTML = '';
+
+    carrito.forEach((item) => {
       const fila = document.createElement('tr');
 
-      // Nombre del producto.
-      const tdProducto = document.createElement('td');
-      const nombre = document.createElement('strong');
-      nombre.textContent = item.nombre;
+      fila.innerHTML = `
+        <td>
+          <strong>${escaparHTML(item.nombre)}</strong>
+          <small>${escaparHTML(item.codigo)}</small>
+        </td>
 
-      const disponible = document.createElement('small');
-      disponible.style.display = 'block';
-      disponible.style.color = '#66766e';
-      disponible.textContent = `Disponible: ${item.stock}`;
+        <td>${item.peso_gramos} g</td>
 
-      tdProducto.append(nombre, disponible);
-      fila.appendChild(tdProducto);
+        <td>
+          <input
+            type="number"
+            class="cantidad-producto-venta"
+            min="1"
+            max="${item.stock_actual}"
+            step="1"
+            value="${item.cantidad}"
+            aria-label="Cantidad de ${escaparHTML(item.nombre)}"
+          >
+        </td>
 
-      // Selector de presentación.
-      const tdPresentacion = document.createElement('td');
-      const selector = document.createElement('select');
+        <td>${formatoMoneda(item.precio_unitario)}</td>
 
-      item.presentaciones.forEach((presentacion, indice) => {
-        const opcion = document.createElement('option');
-        opcion.value = String(indice);
-        opcion.textContent = presentacion.nombre;
-        selector.appendChild(opcion);
+        <td>
+          <strong>
+            ${formatoMoneda(item.cantidad * item.precio_unitario)}
+          </strong>
+        </td>
+
+        <td>
+          <button
+            type="button"
+            class="eliminar-producto-venta"
+            aria-label="Eliminar ${escaparHTML(item.nombre)}"
+          >
+            <i data-lucide="trash-2"></i>
+          </button>
+        </td>
+      `;
+
+      const inputCantidad = fila.querySelector(
+        '.cantidad-producto-venta'
+      );
+
+      inputCantidad.addEventListener('change', () => {
+        cambiarCantidad(item.id_presentacion, inputCantidad.value);
       });
 
-      selector.value = String(item.presentacionIndice);
+      const botonEliminar = fila.querySelector(
+        '.eliminar-producto-venta'
+      );
 
-      selector.addEventListener('change', () => {
-        item.presentacionIndice = Number(selector.value);
-        mostrarCarrito();
+      botonEliminar.addEventListener('click', () => {
+        eliminarProducto(item.id_presentacion);
       });
-
-      tdPresentacion.appendChild(selector);
-      fila.appendChild(tdPresentacion);
-
-      // Controles para aumentar o disminuir.
-      const tdCantidad = document.createElement('td');
-      const controles = document.createElement('div');
-      controles.className = 'nueva-venta__cantidad';
-
-      const menos = document.createElement('button');
-      menos.type = 'button';
-      menos.textContent = '−';
-
-      menos.addEventListener('click', () => {
-        if (item.cantidad > 1) {
-          item.cantidad--;
-          mostrarCarrito();
-        }
-      });
-
-      const cantidad = document.createElement('span');
-      cantidad.textContent = item.cantidad;
-
-      const mas = document.createElement('button');
-      mas.type = 'button';
-      mas.textContent = '+';
-
-      mas.addEventListener('click', () => {
-        if (item.cantidad < item.stock) {
-          item.cantidad++;
-          mostrarCarrito();
-        } else {
-          mostrarMensaje('Cantidad superior al stock disponible.');
-        }
-      });
-
-      controles.append(menos, cantidad, mas);
-      tdCantidad.appendChild(controles);
-      fila.appendChild(tdCantidad);
-
-      // Precio de la presentación seleccionada.
-      const presentacion = item.presentaciones[item.presentacionIndice];
-      const precio = presentacion.precio;
-
-      const tdPrecio = document.createElement('td');
-      tdPrecio.textContent = dinero(precio);
-      fila.appendChild(tdPrecio);
-
-      // Subtotal de este producto.
-      const tdTotal = document.createElement('td');
-      tdTotal.textContent = dinero(precio * item.cantidad);
-      tdTotal.style.fontWeight = '600';
-      fila.appendChild(tdTotal);
-
-      // Eliminar el producto.
-      const tdEliminar = document.createElement('td');
-      const eliminar = document.createElement('button');
-
-      eliminar.type = 'button';
-      eliminar.className = 'nueva-venta__eliminar';
-      eliminar.textContent = '×';
-      eliminar.setAttribute('aria-label', `Eliminar ${item.nombre}`);
-
-      eliminar.addEventListener('click', () => {
-        const indice = carrito.indexOf(item);
-        carrito.splice(indice, 1);
-        mostrarCarrito();
-      });
-
-      tdEliminar.appendChild(eliminar);
-      fila.appendChild(tdEliminar);
 
       tabla.appendChild(fila);
     });
 
-    contador.textContent =
-      `${carrito.length} ${carrito.length === 1 ? 'producto' : 'productos'}`;
+    const cantidadTotal = carrito.reduce(
+      (acumulado, item) => acumulado + item.cantidad,
+      0
+    );
 
-    actualizarTotal();
+    if (elementos.contadorProductos) {
+      elementos.contadorProductos.textContent =
+        `${cantidadTotal} producto${cantidadTotal === 1 ? '' : 's'}`;
+    }
+
+    actualizarTotales();
+    actualizarIconos();
   }
 
-  // =====================================
-  // CALCULAR TOTAL Y CAMBIO
-  // =====================================
+  // ============================================
+  // CALCULAR TOTALES
+  // ============================================
 
   function obtenerTotal() {
-    return carrito.reduce((suma, item) => {
-      const precio = item.presentaciones[item.presentacionIndice].precio;
-      return suma + precio * item.cantidad;
-    }, 0);
+    return carrito.reduce(
+      (acumulado, item) =>
+        acumulado + item.cantidad * item.precio_unitario,
+      0
+    );
   }
 
-  function actualizarTotal() {
+  function actualizarTotales() {
     const total = obtenerTotal();
 
-    subtotalTexto.textContent = dinero(total);
-    totalTexto.textContent = dinero(total);
+    if (elementos.subtotal) {
+      elementos.subtotal.textContent = formatoMoneda(total);
+    }
 
-    const valor = Number(recibido.value) || 0;
-    const cambioCalculado = Math.max(0, valor - total);
+    if (elementos.total) {
+      elementos.total.textContent = formatoMoneda(total);
+    }
 
-    cambio.textContent = dinero(cambioCalculado);
+    actualizarCambio();
   }
 
-  // =====================================
-  // CONTADO O CRÉDITO
-  // =====================================
+  // ============================================
+  // CALCULAR CAMBIO
+  // ============================================
 
-  function tipoSeleccionado() {
-    return document.querySelector('input[name="tipoVenta"]:checked').value;
+  function actualizarCambio() {
+    if (!elementos.cambio) return;
+
+    if (tipoVenta === 'CREDITO') {
+      elementos.cambio.textContent = formatoMoneda(0);
+      return;
+    }
+
+    const recibido = Number(elementos.valorRecibido?.value || 0);
+    const total = obtenerTotal();
+
+    elementos.cambio.textContent =
+      formatoMoneda(Math.max(0, recibido - total));
   }
 
-  function actualizarFormaPago() {
-    const credito = tipoSeleccionado() === 'credito';
+  // ============================================
+  // TIPO DE VENTA
+  // ============================================
 
-    campoCliente.hidden = !credito;
-    campoMedio.hidden = credito;
-    campoRecibido.hidden = credito || medioPago.value !== 'efectivo';
-    campoCambio.hidden = credito || medioPago.value !== 'efectivo';
+  function actualizarTipoVenta() {
+    const seleccionado = document.querySelector(
+      'input[name="tipoVenta"]:checked'
+    );
 
-    cliente.required = credito;
+    tipoVenta = seleccionado?.value === 'credito'
+      ? 'CREDITO'
+      : 'CONTADO';
 
-    document.querySelectorAll('.nueva-venta__tipo').forEach(opcion => {
-      opcion.classList.toggle(
-        'activo',
-        opcion.querySelector('input').checked
+    const esCredito = tipoVenta === 'CREDITO';
+
+    if (elementos.campoCliente) {
+      elementos.campoCliente.hidden = !esCredito;
+    }
+
+    if (elementos.cliente) {
+      elementos.cliente.required = esCredito;
+    }
+
+    if (elementos.campoMedioPago) {
+      elementos.campoMedioPago.hidden = esCredito;
+    }
+
+    if (elementos.campoValorRecibido) {
+      elementos.campoValorRecibido.hidden = esCredito;
+    }
+
+    if (elementos.campoCambio) {
+      elementos.campoCambio.hidden = esCredito;
+    }
+
+    document.querySelectorAll('.nueva-venta__tipo').forEach(
+      (etiqueta) => {
+        const radio = etiqueta.querySelector(
+          'input[name="tipoVenta"]'
+        );
+
+        etiqueta.classList.toggle(
+          'activo',
+          Boolean(radio?.checked)
+        );
+      }
+    );
+
+    actualizarCambio();
+  }
+
+  // ============================================
+  // VALIDAR VENTA
+  // ============================================
+
+  function validarVenta() {
+    if (carrito.length === 0) {
+      mostrarMensaje(
+        'Debes agregar al menos un producto a la venta.',
+        true
       );
-    });
-
-    actualizarTotal();
-  }
-
-  document.querySelectorAll('input[name="tipoVenta"]').forEach(radio => {
-    radio.addEventListener('change', actualizarFormaPago);
-  });
-
-  medioPago.addEventListener('change', actualizarFormaPago);
-  recibido.addEventListener('input', actualizarTotal);
-
-  // =====================================
-  // GUARDAR LA VENTA
-  // =====================================
-
-  formulario.addEventListener('submit', evento => {
-    evento.preventDefault();
-    ocultarMensaje();
-
-    if (!carrito.length) {
-      mostrarMensaje('Agrega al menos un producto a la venta.');
-      return;
+      return false;
     }
 
-    const tipo = tipoSeleccionado();
-    const total = obtenerTotal();
-
-    if (tipo === 'credito' && !cliente.value) {
-      mostrarMensaje('Selecciona un cliente para registrar el crédito.');
-      return;
-    }
-
-    if (tipo === 'contado' && medioPago.value === 'efectivo') {
-      if (recibido.value === '' || Number(recibido.value) < total) {
-        mostrarMensaje('El valor recibido debe cubrir el total de la venta.');
-        return;
+    for (const item of carrito) {
+      if (
+        !Number.isSafeInteger(item.cantidad) ||
+        item.cantidad <= 0 ||
+        item.cantidad > item.stock_actual
+      ) {
+        mostrarMensaje(
+          `Verifica la cantidad de ${item.nombre}.`,
+          true
+        );
+        return false;
       }
     }
 
-    // Fecha y hora del registro.
-    const ahora = new Date();
+    if (tipoVenta === 'CREDITO') {
+      const idCliente = Number(elementos.cliente?.value);
 
-    const fecha = [
-      ahora.getFullYear(),
-      String(ahora.getMonth() + 1).padStart(2, '0'),
-      String(ahora.getDate()).padStart(2, '0')
-    ].join('-');
+      if (!Number.isSafeInteger(idCliente) || idCliente <= 0) {
+        mostrarMensaje(
+          'Selecciona un cliente para registrar la venta a crédito.',
+          true
+        );
+        return false;
+      }
+    }
 
-    const hora = ahora.toLocaleTimeString('es-CO', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
+    if (tipoVenta === 'CONTADO') {
+      const medio = elementos.medioPago?.value;
 
-    const id = siguienteNumero();
+      if (!['efectivo', 'transferencia'].includes(medio)) {
+        mostrarMensaje('Selecciona un medio de pago válido.', true);
+        return false;
+      }
 
-    // Información de la venta.
-    const venta = {
-      id,
-      cliente: tipo === 'credito'
-        ? cliente.value
-        : 'Consumidor final',
-      fecha,
-      hora,
-      tipo,
-      medioPago: tipo === 'credito' ? 'credito' : medioPago.value,
-      total,
-      valorRecibido: tipo === 'contado' && medioPago.value === 'efectivo'
-        ? Number(recibido.value)
-        : total,
-      notas: document.getElementById('notasVenta').value.trim(),
+      if (medio === 'efectivo') {
+        const recibido = Number(elementos.valorRecibido?.value);
 
-      productos: carrito.map(item => {
-        const presentacion = item.presentaciones[item.presentacionIndice];
+        if (
+          !elementos.valorRecibido?.value ||
+          !Number.isFinite(recibido) ||
+          recibido < obtenerTotal()
+        ) {
+          mostrarMensaje(
+            'El valor recibido debe ser igual o superior al total.',
+            true
+          );
+          return false;
+        }
+      }
+    }
 
-        return {
-          id: item.id,
-          nombre: item.nombre,
-          presentacion: presentacion.nombre,
-          cantidad: item.cantidad,
-          precio: presentacion.precio,
-          subtotal: presentacion.precio * item.cantidad
-        };
-      })
+    return true;
+  }
+
+  // ============================================
+  // REGISTRAR VENTA EN MYSQL
+  // ============================================
+
+  async function registrarVenta(evento) {
+    evento.preventDefault();
+
+    if (guardando) return;
+
+    limpiarMensaje();
+
+    if (!validarVenta()) return;
+
+    const medioPago = tipoVenta === 'CONTADO'
+      ? elementos.medioPago.value.toUpperCase()
+      : null;
+
+    const datosVenta = {
+      id_cliente: tipoVenta === 'CREDITO'
+        ? Number(elementos.cliente.value)
+        : null,
+
+      tipo_venta: tipoVenta,
+
+      metodo_pago: medioPago,
+
+      observaciones: elementos.notas?.value.trim() || null,
+
+      productos: carrito.map((item) => ({
+        id_presentacion: item.id_presentacion,
+        cantidad: item.cantidad
+      }))
     };
 
-    // Preparar los datos antes de guardarlos.
-    const ventas = leerDatos(CLAVE_VENTAS);
-    ventas.unshift(venta);
+    guardando = true;
 
-    // Las ventas a crédito generan una cuenta por cobrar.
-    const cartera = leerDatos(CLAVE_CARTERA);
-
-    if (tipo === 'credito') {
-      cartera.unshift({
-        id: `CC-${id}`,
-        ventaId: id,
-        cliente: cliente.value,
-        montoTotal: total,
-        saldoPendiente: total,
-        estado: 'pendiente',
-        fecha
-      });
+    if (elementos.botonRegistrar) {
+      elementos.botonRegistrar.disabled = true;
+      elementos.botonRegistrar.textContent = 'Registrando venta...';
     }
 
-    // Guardar los datos del prototipo.
     try {
-      localStorage.setItem(CLAVE_VENTAS, JSON.stringify(ventas));
+      const respuesta = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(datosVenta)
+      });
 
-      if (tipo === 'credito') {
-        localStorage.setItem(CLAVE_CARTERA, JSON.stringify(cartera));
+      const resultado = await respuesta.json();
+
+      if (!respuesta.ok) {
+        throw new Error(
+          resultado.mensaje || 'No fue posible registrar la venta.'
+        );
       }
+
+      mostrarMensaje(
+        `Venta N.º ${resultado.id_venta} registrada correctamente. ` +
+        `Total: ${formatoMoneda(resultado.total)}`
+      );
+
+      if (elementos.numeroVenta) {
+        elementos.numeroVenta.textContent =
+          `V-${resultado.id_venta}`;
+      }
+
+      carrito = [];
+      elementos.formulario.reset();
+
+      renderizarCarrito();
+      actualizarTipoVenta();
+
+      await cargarProductos();
+
+      // Regresar al listado después del registro.
+      // Se espera unos segundos para mostrar la confirmación.
+      setTimeout(() => {
+        window.location.href = 'ventas.html';
+      }, 1800);
+
     } catch (error) {
-      console.error('Error al guardar la venta:', error);
-      mostrarMensaje('No fue posible guardar la venta.');
-      return;
+      console.error('Error registrando venta:', error);
+
+      mostrarMensaje(error.message, true);
+
+      // Si se perdió la respuesta del servidor, no se debe
+      // reenviar automáticamente: la venta pudo haberse guardado.
+    } finally {
+      guardando = false;
+
+      if (elementos.botonRegistrar) {
+        elementos.botonRegistrar.disabled = false;
+        elementos.botonRegistrar.innerHTML = `
+          <i data-lucide="check-circle"></i>
+          Registrar venta
+        `;
+
+        actualizarIconos();
+      }
     }
+  }
 
-    // Evita registrar la misma venta dos veces.
-    botonGuardar.disabled = true;
+  // ============================================
+  // EVENTOS
+  // ============================================
 
-    alert(`Venta ${id} registrada correctamente.`);
-
-    // Regresar al listado.
-    window.location.href = 'ventas.html';
-  });
-
-  // =====================================
-  // EVENTOS DE PRODUCTOS
-  // =====================================
-
-  buscador.addEventListener('input', mostrarDisponibles);
-
-  document.getElementById('agregarOtroProducto').addEventListener(
-    'click',
-    () => {
-      buscador.focus();
-      buscador.select();
-    }
+  elementos.buscarProducto?.addEventListener(
+    'input',
+    renderizarProductos
   );
 
-  // =====================================
-  // INICIAR PANTALLA
-  // =====================================
+  elementos.agregarProducto?.addEventListener('click', () => {
+    elementos.buscarProducto?.focus();
+    renderizarProductos();
+  });
 
-  mostrarDisponibles();
+  elementos.valorRecibido?.addEventListener(
+    'input',
+    actualizarCambio
+  );
 
-  // Agregamos dos productos para visualizar
-  // el formulario como aparece en el mockup.
-  agregarProducto(catalogo[0]);
-  agregarProducto(catalogo[1]);
-  agregarProducto(catalogo[0]);
+  document.querySelectorAll(
+    'input[name="tipoVenta"]'
+  ).forEach((radio) => {
+    radio.addEventListener('change', () => {
+      limpiarMensaje();
+      actualizarTipoVenta();
+    });
+  });
 
-  recibido.value = obtenerTotal();
+  elementos.formulario.addEventListener(
+    'submit',
+    registrarVenta
+  );
 
-  actualizarFormaPago();
+  // ============================================
+  // INICIALIZAR
+  // ============================================
 
-  if (window.lucide) window.lucide.createIcons();
+  actualizarTipoVenta();
+  renderizarCarrito();
+
+  Promise.all([
+    cargarProductos(),
+    cargarClientes()
+  ]);
+
+  actualizarIconos();
 });
