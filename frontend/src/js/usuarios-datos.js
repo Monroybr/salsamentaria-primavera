@@ -1,144 +1,226 @@
+/*
+  SALSAMENTARIA PRIMAVERA
+  Datos compartidos del módulo de usuarios.
 
-/* Datos compartidos del módulo de usuarios.
-   Prototipo: no gestiona autenticación real. */
+  Los usuarios y sus permisos se almacenan en MySQL
+  mediante el backend Express.
+*/
 
 window.UsuariosDatos = (() => {
-  const CLAVE = 'primavera_usuarios_demo_v1';
+  const API_URL = 'http://localhost:4000/api/usuarios';
 
   const modulos = [
-    { id: 'productos', nombre: 'Productos', icono: 'package', descripcion: 'Consultar el catálogo de productos' },
-    { id: 'inventario', nombre: 'Inventario', icono: 'archive', descripcion: 'Consultar existencias y movimientos' },
-    { id: 'fraccionamiento', nombre: 'Fraccionamiento', icono: 'scale', descripcion: 'Registrar y consultar fraccionamientos' },
-    { id: 'ventas', nombre: 'Ventas', icono: 'shopping-cart', descripcion: 'Registrar ventas y consultar el historial' },
-    { id: 'clientes', nombre: 'Clientes', icono: 'users', descripcion: 'Consultar y agregar clientes' },
-    { id: 'cartera', nombre: 'Cartera', icono: 'wallet', descripcion: 'Consultar saldos y registrar abonos' },
-    { id: 'reportes', nombre: 'Reportes', icono: 'chart-column', descripcion: 'Consultar y descargar reportes' }
+    {
+      id: 'productos',
+      nombre: 'Productos',
+      icono: 'package',
+      descripcion: 'Consultar el catálogo de productos'
+    },
+    {
+      id: 'inventario',
+      nombre: 'Inventario',
+      icono: 'archive',
+      descripcion: 'Consultar existencias y movimientos'
+    },
+    {
+      id: 'fraccionamiento',
+      nombre: 'Fraccionamiento',
+      icono: 'scale',
+      descripcion: 'Registrar y consultar fraccionamientos'
+    },
+    {
+      id: 'ventas',
+      nombre: 'Ventas',
+      icono: 'shopping-cart',
+      descripcion: 'Registrar ventas y consultar el historial'
+    },
+    {
+      id: 'clientes',
+      nombre: 'Clientes',
+      icono: 'users',
+      descripcion: 'Consultar y agregar clientes'
+    },
+    {
+      id: 'cartera',
+      nombre: 'Cartera',
+      icono: 'wallet',
+      descripcion: 'Consultar saldos y registrar abonos'
+    },
+    {
+      id: 'reportes',
+      nombre: 'Reportes',
+      icono: 'chart-column',
+      descripcion: 'Consultar y descargar reportes'
+    }
   ];
 
   const permisosIniciales = [
-    'productos', 'inventario', 'ventas', 'clientes', 'cartera'
+    'productos',
+    'inventario',
+    'ventas',
+    'clientes',
+    'cartera'
   ];
 
-  const iniciales = [
-    {
-      id: 'U-001',
-      nombres: 'Ana',
-      apellidos: 'Martínez',
-      correo: 'ana@primavera.co',
-      telefono: '',
-      rol: 'Administrador',
-      permisos: modulos.map(m => m.id),
-      estado: 'Activo',
-      ultimoAcceso: 'Ahora'
-    },
-    {
-      id: 'U-002',
-      nombres: 'Carlos',
-      apellidos: 'Rojas',
-      correo: 'carlos@primavera.co',
-      telefono: '',
-      rol: 'Empleado',
-      permisos: [...permisosIniciales],
-      estado: 'Activo',
-      ultimoAcceso: 'Hoy, 8:24 a. m.'
-    },
-    {
-      id: 'U-003',
-      nombres: 'Laura',
-      apellidos: 'Pérez',
-      correo: 'laura@primavera.co',
-      telefono: '',
-      rol: 'Empleado',
-      permisos: [...permisosIniciales],
-      estado: 'Activo',
-      ultimoAcceso: 'Hoy, 8:24 a. m.'
-    }
-  ];
+  function obtenerIdRol(rol) {
+    if (rol === 'Administrador') return 1;
+    if (rol === 'Empleado' || rol === 'Vendedor') return 2;
 
-  function obtener() {
+    throw new Error('El rol seleccionado no es válido.');
+  }
+
+  function nombreRol(rol) {
+    return String(rol).toUpperCase() === 'ADMINISTRADOR'
+      ? 'Administrador'
+      : 'Empleado';
+  }
+
+  function transformarUsuario(usuario) {
+    return {
+      id: String(usuario.id_usuario),
+      id_usuario: usuario.id_usuario,
+      id_rol: usuario.id_rol,
+      nombres: usuario.nombre,
+      apellidos: usuario.apellido,
+      correo: usuario.correo,
+      nombre_usuario: usuario.nombre_usuario,
+      telefono: usuario.telefono || '',
+      rol: nombreRol(usuario.rol),
+      permisos: Array.isArray(usuario.permisos)
+        ? usuario.permisos
+        : [],
+      estado: usuario.estado === 'ACTIVO'
+        ? 'Activo'
+        : 'Inactivo',
+      ultimoAcceso: 'No disponible',
+      fecha_creacion: usuario.fecha_creacion
+    };
+  }
+
+  async function solicitar(ruta = '', opciones = {}) {
+    let respuesta;
+
     try {
-      const guardados = JSON.parse(localStorage.getItem(CLAVE));
-      if (Array.isArray(guardados)) return guardados;
+      respuesta = await fetch(`${API_URL}${ruta}`, {
+        ...opciones,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(opciones.headers || {})
+        }
+      });
     } catch (error) {
-      console.warn('No fue posible leer los usuarios.', error);
-    }
-    return iniciales.map(u => ({ ...u, permisos: [...u.permisos] }));
-  }
-
-  function guardarTodos(usuarios) {
-    localStorage.setItem(CLAVE, JSON.stringify(usuarios));
-  }
-
-  function normalizar(valor) {
-    return String(valor || '').trim().toLocaleLowerCase('es');
-  }
-
-  function buscar(id) {
-    return obtener().find(u => u.id === id);
-  }
-
-  function guardar(usuario) {
-    const usuarios = obtener();
-    const correo = normalizar(usuario.correo);
-
-    if (usuarios.some(u =>
-      normalizar(u.correo) === correo && u.id !== usuario.id
-    )) {
-      throw new Error('Ya existe un usuario con ese correo electrónico.');
+      throw new Error(
+        'No fue posible conectar con el servidor. ' +
+        'Verifica que el backend esté ejecutándose en el puerto 4000.'
+      );
     }
 
-    if (usuario.id) {
-      const indice = usuarios.findIndex(u => u.id === usuario.id);
-      if (indice === -1) throw new Error('El usuario no existe.');
+    const contenido = await respuesta.text();
 
-      usuarios[indice] = {
-        ...usuarios[indice],
-        ...usuario,
-        permisos: usuario.rol === 'Administrador'
-          ? modulos.map(m => m.id)
-          : [...usuario.permisos]
-      };
+    let resultado;
 
-      guardarTodos(usuarios);
-      return usuarios[indice];
+    try {
+      resultado = contenido ? JSON.parse(contenido) : null;
+    } catch (error) {
+      throw new Error(
+        'El servidor devolvió una respuesta que no es JSON.'
+      );
     }
 
-    const siguiente = Math.max(
-      0,
-      ...usuarios.map(u => Number(String(u.id).replace('U-', '')) || 0)
-    ) + 1;
+    if (!respuesta.ok) {
+      throw new Error(
+        resultado?.mensaje ||
+        `Error del servidor (${respuesta.status}).`
+      );
+    }
 
-    const nuevo = {
-      ...usuario,
-      id: `U-${String(siguiente).padStart(3, '0')}`,
-      estado: 'Activo',
-      ultimoAcceso: 'Sin acceso',
-      permisos: usuario.rol === 'Administrador'
-        ? modulos.map(m => m.id)
-        : [...usuario.permisos]
+    return resultado;
+  }
+
+  async function obtener() {
+    const usuarios = await solicitar('/');
+
+    return usuarios.map(transformarUsuario);
+  }
+
+  async function buscar(id) {
+    const usuario = await solicitar(
+      `/${encodeURIComponent(id)}`
+    );
+
+    return transformarUsuario(usuario);
+  }
+
+  async function obtenerRoles() {
+    return solicitar('/roles');
+  }
+
+  async function guardar(usuario) {
+    const esEdicion = Boolean(usuario.id);
+
+    const nombres = String(usuario.nombres || '').trim();
+    const apellidos = String(usuario.apellidos || '').trim();
+
+    const nombreUsuario = String(
+      usuario.nombre_usuario ||
+      usuario.correo.split('@')[0]
+    ).trim();
+
+    const permisos = usuario.rol === 'Administrador'
+      ? modulos.map(modulo => modulo.id)
+      : [...usuario.permisos];
+
+    const cuerpo = {
+      nombre: nombres,
+      apellido: apellidos,
+      correo: String(usuario.correo).trim().toLowerCase(),
+      nombre_usuario: nombreUsuario,
+      id_rol: obtenerIdRol(usuario.rol),
+      permisos
     };
 
-    usuarios.push(nuevo);
-    guardarTodos(usuarios);
-    return nuevo;
-  }
-
-  function cambiarEstado(id) {
-    const usuarios = obtener();
-    const usuario = usuarios.find(u => u.id === id);
-    if (!usuario) throw new Error('Usuario no encontrado.');
-
-    // Evita desactivar la cuenta principal de demostración.
-    if (id === 'U-001') {
-      throw new Error('No puedes desactivar al administrador principal.');
+    if (usuario.contrasena) {
+      cuerpo.contrasena = usuario.contrasena;
     }
 
-    usuario.estado = usuario.estado === 'Activo'
-      ? 'Inactivo'
-      : 'Activo';
+    const resultado = await solicitar(
+      esEdicion
+        ? `/${encodeURIComponent(usuario.id)}`
+        : '/',
+      {
+        method: esEdicion ? 'PUT' : 'POST',
+        body: JSON.stringify(cuerpo)
+      }
+    );
 
-    guardarTodos(usuarios);
-    return usuario;
+    return resultado;
+  }
+
+  async function cambiarEstado(id) {
+    const usuario = await buscar(id);
+
+    if (
+      Number(usuario.id_usuario) === 1 &&
+      usuario.estado === 'Activo'
+    ) {
+      throw new Error(
+        'No puedes desactivar al administrador principal.'
+      );
+    }
+
+    const nuevoEstado = usuario.estado === 'Activo'
+      ? 'INACTIVO'
+      : 'ACTIVO';
+
+    return solicitar(
+      `/${encodeURIComponent(id)}/estado`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({
+          estado: nuevoEstado
+        })
+      }
+    );
   }
 
   return {
@@ -146,6 +228,7 @@ window.UsuariosDatos = (() => {
     permisosIniciales,
     obtener,
     buscar,
+    obtenerRoles,
     guardar,
     cambiarEstado
   };

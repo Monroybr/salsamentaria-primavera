@@ -1,201 +1,270 @@
-
 /* ==========================================
-   NAVEGACIÓN ENTRE MÓDULOS
+   NAVEGACIÓN Y PERMISOS
    SALSAMENTARIA PRIMAVERA
 ========================================== */
 
-document.addEventListener('DOMContentLoaded', () => {
+(function () {
+  'use strict';
 
-  /* ==========================================
-     1. IDENTIFICAR PÁGINA ACTUAL
-  ========================================== */
+  function iniciarNavegacion() {
+    const auth = window.PrimaveraAuth;
 
-  const paginaActual =
-    window.location.pathname.split('/').pop()
-    || 'index.html';
+    if (!auth) {
+      console.error('ERROR: auth.js no está cargado.');
+      return;
+    }
 
+    const paginaActual =
+      window.location.pathname.split('/').pop()
+      || 'index.html';
 
-  /* ==========================================
-     2. RELACIONAR PÁGINAS CON MÓDULOS
-  ========================================== */
+    const paginas = {
+      'dashboard.html': 'inicio',
+      'productos.html': 'productos',
+      'nuevo-producto.html': 'productos',
+      'inventario.html': 'inventario',
+      'registrar-movimiento.html': 'inventario',
+      'fraccionamiento.html': 'fraccionamiento',
+      'historial-fraccionamientos.html': 'fraccionamiento',
+      'ventas.html': 'ventas',
+      'nueva-venta.html': 'ventas',
+      'clientes.html': 'clientes',
+      'nuevo-cliente.html': 'clientes',
+      'cartera.html': 'cartera',
+      'registrar-abono.html': 'cartera',
+      'reportes.html': 'reportes',
+      'usuarios.html': 'usuarios',
+      'nuevo-usuario.html': 'usuarios'
+    };
 
-  const paginas = {
+    const moduloActual = paginas[paginaActual];
 
-    // INICIO
-    'dashboard.html': 'inicio',
+    const usuario = auth.obtenerSesion();
 
-    // PRODUCTOS
-    'productos.html': 'productos',
-    'nuevo-producto.html': 'productos',
+    /* ==========================================
+       CERRAR SESIÓN
+    ========================================== */
 
-    // INVENTARIO
-    'inventario.html': 'inventario',
-    'registrar-movimiento.html': 'inventario',
-
-    // FRACCIONAMIENTO
-    'fraccionamiento.html': 'fraccionamiento',
-    'historial-fraccionamientos.html': 'fraccionamiento',
-
-    // VENTAS
-    'ventas.html': 'ventas',
-    'nueva-venta.html': 'ventas',
-
-    // CLIENTES
-    'clientes.html': 'clientes',
-    'nuevo-cliente.html': 'clientes',
-
-    // CARTERA
-    'cartera.html': 'cartera',
-    'registrar-abono.html': 'cartera',
-
-    // REPORTES
-    'reportes.html': 'reportes',
-
-    // USUARIOS
-    'usuarios.html': 'usuarios',
-    'nuevo-usuario.html': 'usuarios'
-
-  };
-
-
-  /* ==========================================
-     3. RESALTAR MÓDULO ACTIVO
-  ========================================== */
-
-  const moduloActual = paginas[paginaActual];
-
-  const enlaces = document.querySelectorAll(
-    '.sidebar__enlace[data-modulo]'
-  );
-
-  enlaces.forEach((enlace) => {
-
-    enlace.classList.remove(
-      'sidebar__enlace--activo'
+    const botonSalir = document.getElementById(
+      'cerrarSesion'
     );
 
-    enlace.removeAttribute('aria-current');
+    if (botonSalir) {
+      botonSalir.addEventListener('click', () => {
+        const confirmar = window.confirm(
+          '¿Estás seguro de que deseas cerrar sesión?'
+        );
 
-    if (enlace.dataset.modulo === moduloActual) {
-
-      enlace.classList.add(
-        'sidebar__enlace--activo'
-      );
-
-      enlace.setAttribute('aria-current', 'page');
-
+        if (confirmar) {
+          auth.cerrarSesion();
+        }
+      });
     }
 
-  });
+    /* ==========================================
+       COMPROBAR SESIÓN LOCAL
+    ========================================== */
 
-
-  /* ==========================================
-     4. CERRAR MENÚ MÓVIL
-  ========================================== */
-
-  enlaces.forEach((enlace) => {
-
-    enlace.addEventListener('click', () => {
-
-      document.body.classList.remove('sidebar-open');
-      document.body.classList.remove('menu-open');
-
-      const overlay = document.getElementById(
-        'dashboardOverlay'
-      );
-
-      if (overlay) {
-        overlay.classList.remove('active');
-        overlay.classList.remove('is-visible');
-      }
-
-    });
-
-  });
-
-
-  /* ==========================================
-     5. PROTEGER PÁGINAS INTERNAS
-  ========================================== */
-
-  // Comprobar la sesión aunque auth.js
-  // no se haya incluido en una página.
-  const CLAVE_SESION = 'primavera_sesion_demo';
-
-  let sesion = null;
-
-  try {
-
-    const datos = sessionStorage.getItem(CLAVE_SESION);
-
-    if (datos) {
-      sesion = JSON.parse(datos);
+    if (!usuario) {
+      window.location.replace('index.html');
+      return;
     }
 
-  } catch (error) {
+    /* ==========================================
+       ACTUALIZAR PERFIL
+    ========================================== */
 
-    console.error('Error al leer sesión:', error);
+    function actualizarPerfil(datos) {
+      const nombre = String(
+        datos.nombre || 'Usuario'
+      ).trim();
 
-  }
+      const partes = nombre.split(/\s+/);
 
-  // Si no hay una sesión de administrador,
-  // regresar al inicio de sesión.
-  if (
-    paginaActual !== 'index.html' &&
-    (
-      !sesion ||
-      sesion.id !== 1 ||
-      sesion.rol !== 'Administrador'
-    )
-  ) {
+      const iniciales = (
+        (partes[0]?.[0] || '') +
+        (partes.length > 1
+          ? partes[partes.length - 1][0]
+          : '')
+      ).toUpperCase();
 
-    window.location.replace('index.html');
+      const rol = String(
+        datos.rol || ''
+      ).toUpperCase();
 
-    return;
-  }
+      const rolVisible =
+        rol === 'ADMINISTRADOR'
+          ? 'Administrador'
+          : rol === 'VENDEDOR'
+            ? 'Empleado'
+            : rol || 'Sin rol';
 
+      const elementos = {
+        nombreUsuarioActual: nombre,
+        rolUsuarioActual: rolVisible,
+        avatarUsuarioActual: iniciales,
+        avatarHeaderUsuario: iniciales
+      };
 
-  /* ==========================================
-     6. CERRAR SESIÓN EN CUALQUIER MÓDULO
-  ========================================== */
+      Object.entries(elementos).forEach(
+        ([id, valor]) => {
+          const elemento = document.getElementById(id);
 
-  const botonSalir = document.getElementById(
-    'cerrarSesion'
-  );
-
-  if (botonSalir) {
-
-    botonSalir.addEventListener('click', () => {
-
-      const confirmar = window.confirm(
-        '¿Estás seguro de que deseas cerrar sesión?'
+          if (elemento) {
+            elemento.textContent = valor;
+          }
+        }
       );
 
-      if (!confirmar) {
-        return;
+      const avatarHeader = document.getElementById(
+        'avatarHeaderUsuario'
+      );
+
+      if (avatarHeader) {
+        avatarHeader.title = nombre;
+      }
+    }
+
+    actualizarPerfil(usuario);
+
+    /* ==========================================
+       CONTROL DE PERMISOS
+    ========================================== */
+
+    function puedeAcceder(modulo, datos = usuario) {
+      if (modulo === 'inicio') {
+        return true;
       }
 
-      // Si auth.js está cargado, utilizar
-      // su función de cierre de sesión.
-      if (
-        window.PrimaveraAuth &&
-        typeof window.PrimaveraAuth.cerrarSesion === 'function'
-      ) {
+      const rol = String(
+        datos.rol || ''
+      ).toUpperCase();
 
-        window.PrimaveraAuth.cerrarSesion();
-
-      } else {
-
-        // Alternativa para las páginas que todavía
-        // no cargan auth.js.
-        sessionStorage.removeItem(CLAVE_SESION);
-
-        window.location.replace('index.html');
-
+      if (modulo === 'usuarios') {
+        return rol === 'ADMINISTRADOR';
       }
 
-    });
+      if (rol === 'ADMINISTRADOR') {
+        return true;
+      }
 
+      const permisos = Array.isArray(datos.permisos)
+        ? datos.permisos
+        : [];
+
+      return permisos.some(
+        permiso =>
+          String(permiso).toLowerCase() === modulo
+      );
+    }
+
+    function actualizarMenu(datos) {
+      const enlaces = document.querySelectorAll(
+        '.sidebar__enlace[data-modulo]'
+      );
+
+      enlaces.forEach(enlace => {
+        const modulo = enlace.dataset.modulo;
+
+        enlace.classList.remove(
+          'sidebar__enlace--activo'
+        );
+
+        enlace.removeAttribute('aria-current');
+
+        if (!puedeAcceder(modulo, datos)) {
+          enlace.hidden = true;
+          enlace.style.display = 'none';
+          return;
+        }
+
+        enlace.hidden = false;
+        enlace.style.removeProperty('display');
+
+        if (modulo === moduloActual) {
+          enlace.classList.add(
+            'sidebar__enlace--activo'
+          );
+
+          enlace.setAttribute(
+            'aria-current',
+            'page'
+          );
+        }
+
+        enlace.addEventListener('click', () => {
+          document.body.classList.remove(
+            'sidebar-open',
+            'menu-open'
+          );
+
+          const overlay = document.getElementById(
+            'dashboardOverlay'
+          );
+
+          if (overlay) {
+            overlay.classList.remove(
+              'active',
+              'is-visible'
+            );
+          }
+        });
+      });
+    }
+
+    actualizarMenu(usuario);
+
+    if (
+      moduloActual &&
+      !puedeAcceder(moduloActual)
+    ) {
+      window.location.replace('dashboard.html');
+      return;
+    }
+
+    /* ==========================================
+       VALIDACIÓN CON EL BACKEND
+    ========================================== */
+
+    auth.validarSesion()
+      .then(usuarioActualizado => {
+        if (!usuarioActualizado) {
+          window.location.replace('index.html');
+          return;
+        }
+
+        actualizarPerfil(usuarioActualizado);
+        actualizarMenu(usuarioActualizado);
+
+        if (
+          moduloActual &&
+          !puedeAcceder(
+            moduloActual,
+            usuarioActualizado
+          )
+        ) {
+          window.location.replace('dashboard.html');
+        }
+      })
+      .catch(error => {
+        console.error(
+          'No se pudo verificar la sesión con el servidor:',
+          error
+        );
+      });
   }
 
-});
+  /* ==========================================
+     EJECUTAR CUANDO EXISTA EL DOM
+  ========================================== */
+
+  if (document.readyState === 'loading') {
+    document.addEventListener(
+      'DOMContentLoaded',
+      iniciarNavegacion,
+      { once: true }
+    );
+  } else {
+    iniciarNavegacion();
+  }
+})();

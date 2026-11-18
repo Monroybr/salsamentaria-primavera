@@ -1,17 +1,22 @@
-
 /* ==========================================
    INICIO DE SESIÓN
    SALSAMENTARIA PRIMAVERA
 ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
+  'use strict';
 
-  // Si existe sesión, ir al dashboard.
-  if (window.PrimaveraAuth.redirigirSiAutenticado()) {
+  const auth = window.PrimaveraAuth;
+
+  if (!auth) {
+    console.error('No se cargó auth.js.');
     return;
   }
 
-  // Elementos del formulario.
+  if (auth.redirigirSiAutenticado()) {
+    return;
+  }
+
   const formulario = document.getElementById('formLogin');
   const correo = document.getElementById('correo');
   const contrasena = document.getElementById('contrasena');
@@ -25,119 +30,127 @@ document.addEventListener('DOMContentLoaded', () => {
     !botonMostrar ||
     !mensaje
   ) {
-    console.error('Faltan elementos del formulario de login.');
+    console.error('Faltan elementos del formulario.');
     return;
   }
 
+  const botonIngresar = formulario.querySelector(
+    'button[type="submit"]'
+  );
+
+  const textoOriginal = botonIngresar
+    ? botonIngresar.textContent
+    : 'Ingresar';
 
   /* ==========================================
-     MOSTRAR ERROR
+     MOSTRAR MENSAJES
   ========================================== */
 
   function mostrarError(texto) {
-
     mensaje.textContent = texto;
     mensaje.hidden = false;
   }
 
-
-  /* ==========================================
-     LIMPIAR ERROR
-  ========================================== */
-
   function limpiarError() {
-
     mensaje.textContent = '';
     mensaje.hidden = true;
   }
 
-
   /* ==========================================
-     MOSTRAR / OCULTAR CONTRASEÑA
+     MOSTRAR CONTRASEÑA
   ========================================== */
 
   botonMostrar.addEventListener('click', () => {
+    const oculta = contrasena.type === 'password';
 
-    const estaOculta =
-      contrasena.type === 'password';
+    contrasena.type = oculta ? 'text' : 'password';
 
-    contrasena.type = estaOculta
-      ? 'text'
-      : 'password';
-
-    botonMostrar.textContent = estaOculta
+    botonMostrar.textContent = oculta
       ? 'Ocultar'
       : 'Mostrar';
 
     botonMostrar.setAttribute(
       'aria-pressed',
-      String(estaOculta)
+      String(oculta)
     );
 
     botonMostrar.setAttribute(
       'aria-label',
-      estaOculta
+      oculta
         ? 'Ocultar contraseña'
         : 'Mostrar contraseña'
     );
-
   });
 
+  correo.addEventListener('input', limpiarError);
+  contrasena.addEventListener('input', limpiarError);
 
   /* ==========================================
-     VALIDAR INICIO DE SESIÓN
+     INICIAR SESIÓN
   ========================================== */
 
-  formulario.addEventListener('submit', (evento) => {
+  let procesando = false;
 
+  formulario.addEventListener('submit', async (evento) => {
     evento.preventDefault();
+
+    if (procesando) return;
 
     limpiarError();
 
-    const email = correo.value.trim();
+    const email = correo.value.trim().toLowerCase();
     const clave = contrasena.value;
 
-    // Validar campos vacíos.
     if (!email || !clave) {
-
-      mostrarError(
-        'Debes completar todos los campos.'
-      );
-
+      mostrarError('Debes completar todos los campos.');
       return;
     }
 
-    // Validar formato del correo.
     if (!correo.validity.valid) {
+      mostrarError('Ingresa un correo electrónico válido.');
+      correo.focus();
+      return;
+    }
 
-      mostrarError(
-        'Ingresa un correo electrónico válido.'
+    procesando = true;
+
+    if (botonIngresar) {
+      botonIngresar.disabled = true;
+      botonIngresar.textContent = 'Verificando...';
+    }
+
+    try {
+      const resultado = await auth.iniciarSesion(
+        email,
+        clave
       );
 
-      correo.focus();
+      if (!resultado.correcto) {
+        mostrarError(resultado.mensaje);
 
-      return;
+        contrasena.value = '';
+        contrasena.focus();
+
+        return;
+      }
+
+      window.location.replace('dashboard.html');
+
+    } catch (error) {
+      console.error('Error de inicio de sesión:', error);
+
+      mostrarError(
+        'Ocurrió un error al iniciar sesión.'
+      );
+
+    } finally {
+      procesando = false;
+
+      if (botonIngresar) {
+        botonIngresar.disabled = false;
+        botonIngresar.textContent = textoOriginal;
+      }
     }
-
-    // Comprobar credenciales.
-    const resultado = window.PrimaveraAuth.iniciarSesion(
-      email,
-      clave
-    );
-
-    if (!resultado.correcto) {
-
-      mostrarError(resultado.mensaje);
-
-      contrasena.value = '';
-      contrasena.focus();
-
-      return;
-    }
-
-    // Inicio de sesión correcto.
-    window.location.replace('dashboard.html');
-
   });
 
 });

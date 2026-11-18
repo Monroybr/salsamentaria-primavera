@@ -1,3 +1,7 @@
+<!-- ==========================================
+     BARRA SUPERIOR
+     SALSAMENTARIA PRIMAVERA
+========================================== -->
 
 <header class="header">
 
@@ -7,7 +11,8 @@
     type="button"
     aria-label="Abrir menú"
     aria-controls="sidebar"
-    aria-expanded="false">
+    aria-expanded="false"
+  >
     ☰
   </button>
 
@@ -17,17 +22,24 @@
       type="search"
       placeholder="Buscar en el sistema..."
       aria-label="Buscar en el sistema"
-      class="header__buscar">
+      class="header__buscar"
+    >
 
     <button
       type="button"
       class="header__notificaciones"
-      aria-label="Notificaciones">
+      aria-label="Notificaciones"
+    >
       ♧
     </button>
 
-    <div class="header__avatar" title="Ana Martínez">
-      AM
+    <!-- Avatar del usuario autenticado -->
+    <div
+      class="header__avatar"
+      id="avatarHeaderUsuario"
+      title="Usuario autenticado"
+    >
+      --
     </div>
 
   </div>

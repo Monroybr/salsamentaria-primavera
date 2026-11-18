@@ -10,6 +10,8 @@ const clientesRoutes = require('./routes/clientes.routes');
 const carteraRoutes = require('./routes/cartera.routes');
 const reportesRoutes = require('./routes/reportes.routes');
 const usuariosRoutes = require('./routes/usuarios.routes');
+const authRoutes = require('./routes/auth.routes');
+
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -22,6 +24,12 @@ const MAX_STOCK = 999999999.999;
 
 app.use(cors());
 app.use(express.json());
+
+// ==========================================
+// AUTENTICACIÓN
+// ==========================================
+
+app.use('/api/auth', authRoutes);
 
 // ==========================================
 // FUNCIONES AUXILIARES

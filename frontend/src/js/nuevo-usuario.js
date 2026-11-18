@@ -1,7 +1,7 @@
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const datos = window.UsuariosDatos;
   const formulario = document.getElementById('formNuevoUsuario');
+
   if (!datos || !formulario) return;
 
   const nombre = document.getElementById('nombreUsuario');
@@ -9,43 +9,76 @@ document.addEventListener('DOMContentLoaded', () => {
   const correo = document.getElementById('correoUsuario');
   const telefono = document.getElementById('telefonoUsuario');
   const password = document.getElementById('passwordUsuario');
-  const confirmar = document.getElementById('confirmarPasswordUsuario');
+  const confirmar = document.getElementById(
+    'confirmarPasswordUsuario'
+  );
 
-  const permisosContenedor = document.getElementById('listaPermisosUsuario');
-  const seleccionarTodos = document.getElementById('seleccionarTodosPermisos');
-  const mensaje = document.getElementById('mensajeNuevoUsuario');
-  const guardarBoton = document.getElementById('guardarUsuario');
+  const permisosContenedor = document.getElementById(
+    'listaPermisosUsuario'
+  );
 
-  const idEditar = new URLSearchParams(location.search).get('editar');
-  const usuarioEditar = idEditar ? datos.buscar(idEditar) : null;
+  const seleccionarTodos = document.getElementById(
+    'seleccionarTodosPermisos'
+  );
 
-  if (idEditar && !usuarioEditar) {
+  const mensaje = document.getElementById(
+    'mensajeNuevoUsuario'
+  );
+
+  const guardarBoton = document.getElementById(
+    'guardarUsuario'
+  );
+
+  const idEditar = new URLSearchParams(
+    window.location.search
+  ).get('editar');
+
+  let usuarioEditar = null;
+
+  function mostrarError(texto) {
+    mensaje.textContent = texto;
     mensaje.hidden = false;
-    mensaje.textContent = 'No se encontró el usuario solicitado.';
-    guardarBoton.disabled = true;
-    return;
+  }
+
+  function ocultarError() {
+    mensaje.textContent = '';
+    mensaje.hidden = true;
   }
 
   function rolSeleccionado() {
-    return document.querySelector('input[name="rolUsuario"]:checked').value;
+    return document.querySelector(
+      'input[name="rolUsuario"]:checked'
+    )?.value || 'Empleado';
   }
 
   function casillas() {
-    return [...permisosContenedor.querySelectorAll('input[type="checkbox"]')];
+    return [
+      ...permisosContenedor.querySelectorAll(
+        'input[type="checkbox"]'
+      )
+    ];
   }
 
   function permisosSeleccionados() {
-    return casillas().filter(c => c.checked).map(c => c.value);
+    return casillas()
+      .filter(casilla => casilla.checked)
+      .map(casilla => casilla.value);
   }
 
-  // Construir los siete módulos del mockup.
+  // ==========================================
+  // CONSTRUIR MÓDULOS
+  // ==========================================
+
   datos.modulos.forEach(modulo => {
     const etiqueta = document.createElement('label');
     etiqueta.className = 'nuevo-usuario__permiso';
 
     const icono = document.createElement('span');
     icono.className = 'nuevo-usuario__permiso-icono';
-    icono.innerHTML = `<i data-lucide="${modulo.icono}"></i>`;
+
+    const elementoIcono = document.createElement('i');
+    elementoIcono.setAttribute('data-lucide', modulo.icono);
+    icono.appendChild(elementoIcono);
 
     const texto = document.createElement('span');
     texto.className = 'nuevo-usuario__permiso-texto';
@@ -61,159 +94,269 @@ document.addEventListener('DOMContentLoaded', () => {
     const casilla = document.createElement('input');
     casilla.type = 'checkbox';
     casilla.value = modulo.id;
-    casilla.checked = datos.permisosIniciales.includes(modulo.id);
+
+    casilla.checked = datos.permisosIniciales.includes(
+      modulo.id
+    );
 
     casilla.addEventListener('change', actualizarResumen);
+
     etiqueta.append(icono, texto, casilla);
     permisosContenedor.appendChild(etiqueta);
   });
+
+  // ==========================================
+  // ACTUALIZAR RESUMEN
+  // ==========================================
 
   function actualizarResumen() {
     const nombres = nombre.value.trim();
     const apellidos = apellido.value.trim();
     const rol = rolSeleccionado();
+
     const administrador = rol === 'Administrador';
 
-    document.getElementById('nombreResumenUsuario').textContent =
+    document.getElementById(
+      'nombreResumenUsuario'
+    ).textContent =
       `${nombres} ${apellidos}`.trim() || 'Nuevo usuario';
 
-    document.getElementById('avatarNuevoUsuario').textContent =
-      ((nombres[0] || 'N') + (apellidos[0] || 'U')).toUpperCase();
+    document.getElementById(
+      'avatarNuevoUsuario'
+    ).textContent =
+      (
+        (nombres[0] || 'N') +
+        (apellidos[0] || 'U')
+      ).toUpperCase();
 
-    document.getElementById('rolResumenUsuario').textContent = rol;
+    document.getElementById(
+      'rolResumenUsuario'
+    ).textContent = rol;
+
+    // Administrador tiene todos los módulos.
+    casillas().forEach(casilla => {
+      if (administrador) {
+        casilla.checked = true;
+      }
+
+      casilla.disabled = administrador;
+    });
 
     const cantidad = administrador
       ? datos.modulos.length
       : permisosSeleccionados().length;
 
-    document.getElementById('permisosResumenUsuario').textContent =
+    document.getElementById(
+      'permisosResumenUsuario'
+    ).textContent =
       `${cantidad} ${cantidad === 1 ? 'módulo' : 'módulos'}`;
 
-    document.querySelectorAll('.nuevo-usuario__rol').forEach(etiqueta => {
+    document.querySelectorAll(
+      '.nuevo-usuario__rol'
+    ).forEach(etiqueta => {
+      const radio = etiqueta.querySelector('input');
+
       etiqueta.classList.toggle(
         'nuevo-usuario__rol--activo',
-        etiqueta.querySelector('input').checked
+        Boolean(radio?.checked)
       );
-    });
-
-    // Administrador: todos los módulos incluidos.
-    casillas().forEach(casilla => {
-      if (administrador) casilla.checked = true;
-      casilla.disabled = administrador;
     });
 
     seleccionarTodos.disabled = administrador;
   }
 
-  // Seleccionar o deseleccionar todos los permisos.
+  // ==========================================
+  // SELECCIONAR TODOS LOS PERMISOS
+  // ==========================================
+
   seleccionarTodos.addEventListener('click', () => {
-    const todosMarcados = casillas().every(c => c.checked);
-    casillas().forEach(c => c.checked = !todosMarcados);
+    const todosMarcados = casillas().every(
+      casilla => casilla.checked
+    );
+
+    casillas().forEach(casilla => {
+      casilla.checked = !todosMarcados;
+    });
+
     actualizarResumen();
   });
 
-  document.querySelectorAll('input[name="rolUsuario"]').forEach(radio => {
+  // ==========================================
+  // EVENTOS DEL FORMULARIO
+  // ==========================================
+
+  document.querySelectorAll(
+    'input[name="rolUsuario"]'
+  ).forEach(radio => {
     radio.addEventListener('change', actualizarResumen);
   });
 
   nombre.addEventListener('input', actualizarResumen);
   apellido.addEventListener('input', actualizarResumen);
 
-  // Modo edición.
-  if (usuarioEditar) {
-    document.getElementById('tituloFormularioUsuario').textContent =
-      'Editar usuario';
+  // ==========================================
+  // CARGAR USUARIO EN MODO EDICIÓN
+  // ==========================================
 
-    document.getElementById('textoGuardarUsuario').textContent =
-      'Guardar cambios';
+  if (idEditar) {
+    guardarBoton.disabled = true;
 
-    nombre.value = usuarioEditar.nombres;
-    apellido.value = usuarioEditar.apellidos;
-    correo.value = usuarioEditar.correo;
-    telefono.value = usuarioEditar.telefono || '';
+    try {
+      usuarioEditar = await datos.buscar(idEditar);
 
-    const radio = document.querySelector(
-      `input[name="rolUsuario"][value="${usuarioEditar.rol}"]`
-    );
+      document.getElementById(
+        'tituloFormularioUsuario'
+      ).textContent = 'Editar usuario';
 
-    if (radio) radio.checked = true;
+      document.getElementById(
+        'textoGuardarUsuario'
+      ).textContent = 'Guardar cambios';
 
-    casillas().forEach(casilla => {
-      casilla.checked = usuarioEditar.permisos.includes(casilla.value);
-    });
+      nombre.value = usuarioEditar.nombres;
+      apellido.value = usuarioEditar.apellidos;
+      correo.value = usuarioEditar.correo;
+      telefono.value = usuarioEditar.telefono || '';
 
-    // En edición la contraseña es opcional.
-    password.required = false;
-    confirmar.required = false;
+      const radio = [
+        ...document.querySelectorAll(
+          'input[name="rolUsuario"]'
+        )
+      ].find(
+        elemento => elemento.value === usuarioEditar.rol
+      );
+
+      if (radio) radio.checked = true;
+
+      casillas().forEach(casilla => {
+        casilla.checked = usuarioEditar.permisos.includes(
+          casilla.value
+        );
+      });
+
+      // La contraseña es opcional al editar.
+      password.required = false;
+      confirmar.required = false;
+
+      guardarBoton.disabled = false;
+
+    } catch (error) {
+      mostrarError(
+        `No fue posible cargar el usuario: ${error.message}`
+      );
+
+      guardarBoton.disabled = true;
+    }
   }
 
-  function error(texto) {
-    mensaje.textContent = texto;
-    mensaje.hidden = false;
-  }
+  // ==========================================
+  // GUARDAR USUARIO EN MYSQL
+  // ==========================================
 
-  formulario.addEventListener('submit', evento => {
+  formulario.addEventListener('submit', async evento => {
     evento.preventDefault();
-    mensaje.hidden = true;
+    ocultarError();
 
     const nombres = nombre.value.trim();
     const apellidos = apellido.value.trim();
     const email = correo.value.trim().toLowerCase();
     const rol = rolSeleccionado();
+
     const permisos = rol === 'Administrador'
-      ? datos.modulos.map(m => m.id)
+      ? datos.modulos.map(modulo => modulo.id)
       : permisosSeleccionados();
 
     if (!nombres || !apellidos || !email) {
-      error('Completa los datos personales obligatorios.');
+      mostrarError(
+        'Completa los datos personales obligatorios.'
+      );
       return;
     }
 
     if (rol === 'Empleado' && permisos.length === 0) {
-      error('Selecciona al menos un módulo para el empleado.');
+      mostrarError(
+        'Selecciona al menos un módulo para el empleado.'
+      );
       return;
     }
 
-    // Validación únicamente para el prototipo.
-    // La contraseña nunca se almacena en localStorage.
-    if (!usuarioEditar || password.value || confirmar.value) {
+    const cambiarPassword = (
+      !usuarioEditar ||
+      password.value.length > 0 ||
+      confirmar.value.length > 0
+    );
+
+    if (cambiarPassword) {
       if (password.value.length < 10) {
-        error('La contraseña debe tener al menos 10 caracteres.');
+        mostrarError(
+          'La contraseña debe tener al menos 10 caracteres.'
+        );
         return;
       }
 
       if (password.value !== confirmar.value) {
-        error('Las contraseñas no coinciden.');
+        mostrarError('Las contraseñas no coinciden.');
+        return;
+      }
+
+      if (
+        new TextEncoder().encode(password.value).length > 72
+      ) {
+        mostrarError(
+          'La contraseña no puede superar 72 bytes.'
+        );
         return;
       }
     }
 
     guardarBoton.disabled = true;
 
+    const textoGuardar = document.getElementById(
+      'textoGuardarUsuario'
+    );
+
+    const textoOriginal = textoGuardar.textContent;
+    textoGuardar.textContent = 'Guardando...';
+
     try {
-      datos.guardar({
+      // El formulario actual no tiene campo
+      // para nombre de usuario.
+      // Se propone el texto anterior al @ del correo.
+      const nombreUsuario = usuarioEditar?.nombre_usuario ||
+        email.split('@')[0];
+
+      const usuario = {
         id: usuarioEditar?.id,
         nombres,
         apellidos,
         correo: email,
+        nombre_usuario: nombreUsuario,
         telefono: telefono.value.trim(),
         rol,
         permisos
-      });
+      };
+
+      if (cambiarPassword) {
+        usuario.contrasena = password.value;
+      }
+
+      await datos.guardar(usuario);
 
       alert(
         usuarioEditar
-          ? 'Cambios guardados en el prototipo.'
-          : 'Usuario agregado al prototipo. El acceso real aún no está habilitado.'
+          ? 'Usuario y permisos actualizados en MySQL.'
+          : 'Usuario y permisos registrados en MySQL.'
       );
 
-      location.href = 'usuarios.html';
-    } catch (e) {
+      window.location.href = 'usuarios.html';
+
+    } catch (error) {
+      mostrarError(error.message);
       guardarBoton.disabled = false;
-      error(e.message);
+      textoGuardar.textContent = textoOriginal;
     }
   });
 
   actualizarResumen();
+
   window.lucide?.createIcons();
 });
